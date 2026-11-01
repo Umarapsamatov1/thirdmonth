@@ -1,0 +1,106 @@
+{% extends "admin/base_site.html" %}
+{% load i18n log studyflow_admin %}
+
+{% block bodyclass %}{{ block.super }} dashboard sf-home{% endblock %}
+
+{% block coltype %}colM{% endblock %}
+
+{% block nav-breadcrumbs %}{% endblock %}
+
+{# Saytdagi kabinet kabi: chapda qora sidebar, o‘ngda asosiy panel #}
+{% block nav-sidebar %}{% include "admin/nav_sidebar.html" %}{% endblock %}
+
+{% block content_title %}{% if app_label %}<h1>{{ title }}</h1>{% endif %}{% endblock %}
+
+{% block content %}
+{% sf_role user as role %}
+<div id="content-main" class="sf-dashboard">
+  {% if not app_label %}
+    {% sf_display_name user as display_name %}
+    {% sf_unread_contacts user as unread %}
+    {% sf_admin_stats user as stats %}
+    <section class="sf-welcome sf-welcome--{{ role.key }}">
+      <div class="sf-eyebrow">{{ role.label }} · Boshqaruv markazi</div>
+      <h1>Salom, {{ display_name }}!</h1>
+      <p>{{ role.text }}</p>
+      <div class="sf-welcome-actions">
+        {% if unread %}
+          <a class="sf-btn sf-btn-primary" href="{% url 'admin:core_contact_changelist' %}?is_read__exact=0">{{ unread }} ta o‘qilmagan xabar →</a>
+        {% endif %}
+        {% if site_url %}<a class="sf-btn sf-btn-ghost" href="{{ site_url }}">Saytni ko‘rish ↗</a>{% endif %}
+      </div>
+    </section>
+
+    {% if stats %}
+    <div class="sf-metrics">
+      {% for card in stats %}
+      <a class="sf-metric{% if card.tone %} sf-metric--{{ card.tone }}{% endif %}" href="{{ card.url }}">
+        <span class="sf-metric-top"><small>{{ card.label }}</small><span class="sf-metric-icon" aria-hidden="true">{{ card.icon }}</span></span>
+        <b>{{ card.value }}</b>
+        <span class="sf-metric-hint">{{ card.hint }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endif %}
+
+  <div class="sf-dash-grid{% if app_label %} sf-dash-grid--single{% endif %}">
+    <section class="sf-card">
+      <div class="sf-card-head">
+        <div><small>Boshqaruv</small><h2>Bo‘limlar</h2></div>
+      </div>
+      {% if app_list %}
+      <div class="sf-model-grid">
+        {% for app in app_list %}{% for model in app.models %}
+        <article class="sf-model">
+          <div class="sf-model-icon" aria-hidden="true">{% sf_model_icon app.app_label model.object_name %}</div>
+          <div class="sf-model-body">
+            <small>{{ app.name }}</small>
+            <h3>{% if model.admin_url %}<a href="{{ model.admin_url }}">{{ model.name }}</a>{% else %}{{ model.name }}{% endif %}</h3>
+            <span class="sf-model-count">{% sf_model_count app.app_label model.object_name %} ta yozuv</span>
+          </div>
+          <div class="sf-model-actions">
+            {% if model.admin_url %}<a class="sf-btn sf-btn-outline sf-btn-sm" href="{{ model.admin_url }}">{% if model.view_only %}Ko‘rish{% else %}Boshqarish{% endif %}</a>{% endif %}
+            {% if model.add_url %}<a class="sf-btn sf-btn-primary sf-btn-sm" href="{{ model.add_url }}">+ Qo‘shish</a>{% endif %}
+          </div>
+        </article>
+        {% endfor %}{% endfor %}
+      </div>
+      {% else %}
+      <p class="sf-empty">Sizda hali hech qaysi bo‘limni ko‘rish yoki o‘zgartirish huquqi yo‘q. Super admin bilan bog‘laning.</p>
+      {% endif %}
+    </section>
+
+    {% if not app_label %}
+    <aside class="sf-card" id="recent-actions-module">
+      <div class="sf-card-head">
+        <div><small>Tarix</small><h2>So‘nggi amallarim</h2></div>
+      </div>
+      {% get_admin_log 8 as admin_log for_user user %}
+      {% if not admin_log %}
+      <p class="sf-empty">Hozircha amallar yo‘q.</p>
+      {% else %}
+      <ul class="sf-log-list">
+        {% for entry in admin_log %}
+        <li class="sf-log sf-log--{% if entry.is_addition %}add{% elif entry.is_change %}change{% else %}delete{% endif %}">
+          <span class="sf-log-dot" aria-hidden="true">{% if entry.is_addition %}+{% elif entry.is_change %}✎{% else %}×{% endif %}</span>
+          <div class="sf-log-body">
+            <span class="visually-hidden">{% if entry.is_addition %}Qo‘shildi:{% elif entry.is_change %}O‘zgartirildi:{% else %}O‘chirildi:{% endif %}</span>
+            {% if entry.is_deletion or not entry.get_admin_url %}
+              <b>{{ entry.object_repr }}</b>
+            {% else %}
+              <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>
+            {% endif %}
+            <small>{% if entry.content_type %}{{ entry.content_type.name|capfirst }}{% else %}Noma’lum{% endif %} · {{ entry.action_time|date:"d.m.Y H:i" }}</small>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </aside>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block sidebar %}{% endblock %}

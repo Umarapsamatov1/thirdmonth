@@ -1,0 +1,165 @@
+{% load static %}
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="StudyFlow — zamonaviy o‘quv platformasi">
+  <title>Asosiy sahifa — StudyFlow</title>
+  <link rel="icon" href="{% static 'assets/images/logo.svg' %}" type="image/svg+xml">
+  <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
+</head>
+<body data-page="home" data-authenticated="{{ request.user.is_authenticated|yesno:'true,false' }}">
+<div class="page-shell">
+
+<div class="nav-wrap">
+  <div class="container">
+    <nav class="navbar" aria-label="Asosiy navigatsiya">
+      <a class="brand" href="{% url 'home' %}"><span class="brand-mark">⌁</span><span>StudyFlow</span></a>
+      <div class="nav-links">
+        <a class="nav-link" href="{% url 'home' %}" data-i18n="nav_home">Asosiy</a>
+        <a class="nav-link" href="{% url 'courses' %}" data-i18n="nav_courses">Kurslar</a>
+        <a class="nav-link" href="{% url 'languages' %}" data-i18n="nav_languages">Tillar</a>
+        <a class="nav-link" href="{% url 'about' %}" data-i18n="nav_about">Biz haqimizda</a>
+        <a class="nav-link" href="{% url 'contact' %}" data-i18n="nav_contact">Aloqa</a>
+      </div>
+      <div class="nav-actions">
+        <select class="lang-select" aria-label="Tilni tanlang"><option value="uz">UZ</option><option value="ru">RU</option><option value="en">EN</option></select>
+        <a class="btn btn-outline desktop-auth" data-auth="guest" href="{% url 'login' %}" data-i18n="nav_login">Kirish</a>
+        <a class="btn btn-primary desktop-auth" data-auth="guest" href="{% url 'register' %}" data-i18n="nav_register">Ro‘yxatdan o‘tish</a>
+        <a class="btn btn-dark desktop-auth hidden" data-auth="user" href="{% url 'dashboard' %}" data-i18n="nav_dashboard">Kabinet</a>
+        <button class="icon-btn menu-toggle" aria-label="Menyuni ochish">☰</button>
+      </div>
+    </nav>
+  </div>
+</div>
+
+<main>
+  <section class="hero">
+    <div class="container">
+      <div class="hero-panel">
+        <div class="hero-content">
+          <div class="eyebrow" data-i18n="hero_eyebrow">Yangi avlod ta’lim platformasi</div>
+          <h1><span data-i18n="hero_title_1">Kelajagingizni</span><br><b data-i18n="hero_title_2">bilim bilan quring</b></h1>
+          <p class="hero-copy" data-i18n="hero_desc">Til, dasturlash va zamonaviy kasblarni qisqa darslar, amaliy topshiriqlar va individual rivojlanish yo‘li orqali o‘rganing.</p>
+          <div class="hero-actions"><a class="btn btn-ghost" href="{% url 'courses' %}" data-i18n="hero_courses">Kurslarni ko‘rish</a><a class="btn btn-primary" href="{% url 'register' %}"><span data-i18n="hero_start">Bepul boshlash</span> ↗</a></div>
+        </div>
+        <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
+        <div class="course-orbit" aria-hidden="true">
+          <div class="orbit-card o1"><small>Speaking</small><strong>English<br>B1 → B2</strong><span class="mini">🇬🇧</span></div>
+          <div class="orbit-card o2"><small>Backend</small><strong>Python<br>Developer</strong><span class="mini">🐍</span></div>
+          <div class="orbit-card o3"><small>Design</small><strong>UI / UX<br>Foundation</strong><span class="mini">🎨</span></div>
+          <div class="orbit-card o4"><small>Sun’iy intellekt</small><strong>AI Agent<br>Starter</strong><span class="mini">🤖</span></div>
+          <div class="orbit-card o5"><small>Frontend</small><strong>HTML CSS<br>JavaScript</strong><span class="mini">💻</span></div>
+          <div class="orbit-card o6"><small>Career</small><strong>Portfolio &<br>Interview</strong><span class="mini">🚀</span></div>
+        </div>
+        <div class="rating">4.9/5 baho · 9,400+ o‘quvchi<br><b>★★★★★</b></div>
+      </div>
+      <div class="logo-strip">
+        <div class="logo-pill"><span class="logo-dot"></span>TechUp</div><div class="logo-pill"><span class="logo-dot"></span>EduLab</div><div class="logo-pill"><span class="logo-dot"></span>CodeWay</div><div class="logo-pill"><span class="logo-dot"></span>Lingua</div><div class="logo-pill"><span class="logo-dot"></span>SkillHub</div><div class="logo-pill"><span class="logo-dot"></span>NextGen</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head"><div class="eyebrow">StudyFlow haqida</div><h2 data-i18n="stats_title">O‘qishni aqlli, qulay va <span class="muted-word">natijador</span> qilamiz</h2><p data-i18n="stats_desc">StudyFlow sizga aniq reja, amaliy mashqlar va kundalik progress orqali maqsadingizga tezroq yetishga yordam beradi.</p></div>
+      <div class="grid-3">
+        <article class="card stat-card blue"><div><strong class="stat-value">120+</strong><p>Video dars, amaliy topshiriq va mini-loyiha.</p></div><div class="avatar-stack"><span></span><span></span><span></span></div></article>
+        <article class="card stat-card"><div><small>O‘quvchilar natijasi</small><strong class="stat-value">94%</strong></div><p>Faol o‘quvchilar tanlagan kursini muvaffaqiyatli yakunlaydi.</p></article>
+        <div style="display:grid;gap:16px"><article class="card stat-card lime" style="min-height:130px"><small>Faol o‘quvchilar</small><strong class="stat-value">9.4K+</strong></article><article class="card stat-card dark" style="min-height:130px"><small>Mavjud kurslar</small><strong class="stat-value">20+</strong></article></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="background:#eef1ef">
+    <div class="container">
+      <div class="section-head"><div class="eyebrow">Nega aynan biz?</div><h2>Bir platformada <span class="muted-word">hamma narsa</span></h2><p>O‘rganish, mashq qilish, natijani kuzatish va kerakli yordamni olish uchun yagona tizim.</p></div>
+      <div class="grid-4">
+        <article class="card feature-card"><span class="feature-number">01</span><div class="feature-icon">🧭</div><h3>Shaxsiy yo‘l xaritasi</h3><p>Darajangiz va maqsadingizga mos individual o‘quv rejasi.</p></article>
+        <article class="card feature-card"><span class="feature-number">02</span><div class="feature-icon">🧩</div><h3>Amaliy topshiriqlar</h3><p>Har bir mavzudan keyin bilimni mustahkamlovchi real mashqlar.</p></article>
+        <article class="card feature-card"><span class="feature-number">03</span><div class="feature-icon">📊</div><h3>Progress nazorati</h3><p>O‘sish ko‘rsatkichlari, bajarilgan darslar va natijalar tahlili.</p></article>
+        <article class="card feature-card"><span class="feature-number">04</span><div class="feature-icon">💬</div><h3>Mentor yordami</h3><p>Savollarga javob, kod tahlili va shaxsiy tavsiyalar.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="course-tools"><div><div class="eyebrow">Mashhur yo‘nalishlar</div><h2 style="font-size:clamp(2rem,5vw,3.6rem);margin:12px 0 0;letter-spacing:-.05em">Bugun o‘rganishni boshlang</h2></div><a class="btn btn-outline" href="{% url 'courses' %}">Barcha kurslar →</a></div>
+      <div class="grid-3">
+        <article class="card course-card"><div class="course-cover cover-blue"><span class="course-emoji">🐍</span><span class="level-pill">Boshlang‘ich</span></div><div class="course-body"><h3>Python Backend</h3><div class="course-meta"><span>24 dars</span><span>8 hafta</span></div><div class="progress"><span style="width:78%"></span></div></div></article>
+        <article class="card course-card"><div class="course-cover cover-lime"><span class="course-emoji">🇬🇧</span><span class="level-pill">A2 — B1</span></div><div class="course-body"><h3>English Speaking</h3><div class="course-meta"><span>32 dars</span><span>10 hafta</span></div><div class="progress"><span style="width:62%"></span></div></div></article>
+        <article class="card course-card"><div class="course-cover cover-purple"><span class="course-emoji">🤖</span><span class="level-pill">Yangi</span></div><div class="course-body"><h3>AI Agent Starter</h3><div class="course-meta"><span>18 dars</span><span>6 hafta</span></div><div class="progress"><span style="width:44%"></span></div></div></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container split">
+      <div class="visual-panel"><div class="eyebrow">Sizning progress markazingiz</div><h2 style="font-size:3.2rem;line-height:1;letter-spacing:-.055em;max-width:480px">Natijangizni har kuni ko‘rib boring.</h2><div class="floating-note note-a"><small>Haftalik maqsad</small><h3 style="font-size:2.2rem;margin:6px 0">5 / 7</h3><div class="progress"><span style="width:71%"></span></div></div><div class="floating-note note-b"><small>Bugungi natija</small><h3 style="margin:6px 0">+240 XP</h3><p style="margin:0;color:#687178">3 ta dars yakunlandi</p></div></div>
+      <div><div class="eyebrow">Kuchli odatlar</div><h2 style="font-size:clamp(2.3rem,5vw,4rem);line-height:1;letter-spacing:-.055em;margin:14px 0">Har kuni ozroq,<br><span class="muted-word">lekin doimiy.</span></h2><p style="color:var(--muted)">Qisqa va aniq darslar band kun tartibiga ham oson moslashadi. Kundalik vazifa va eslatmalar motivatsiyani ushlab turadi.</p><div class="check-list"><div class="check"><i>✓</i><div><b>15–25 daqiqalik darslar</b><br><span style="color:var(--muted)">Charchatmaydigan, fokuslangan format.</span></div></div><div class="check"><i>✓</i><div><b>Real portfolio loyihalari</b><br><span style="color:var(--muted)">Ish beruvchiga ko‘rsatish mumkin bo‘lgan natija.</span></div></div><div class="check"><i>✓</i><div><b>Sertifikat va tavsiyalar</b><br><span style="color:var(--muted)">Kurs yakunida yutuqlaringiz tasdiqlanadi.</span></div></div></div><a class="btn btn-dark" href="{% url 'register' %}">Boshlash →</a></div>
+    </div>
+  </section>
+
+  <section class="cta"><div class="container"><div class="cta-box"><h2>Yangi ko‘nikmangizni bugun boshlang.</h2><a class="btn btn-dark" href="{% url 'register' %}">Bepul ro‘yxatdan o‘tish ↗</a></div></div></section>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <a class="brand" href="{% url 'home' %}"><span class="brand-mark">⌁</span><span>StudyFlow</span></a>
+        <p data-i18n="footer_text">Bilim olishni sodda, chiroyli va natijador qiladigan zamonaviy o‘quv platformasi.</p>
+
+<form
+    action="{% url 'newsletter' %}"
+    method="POST"
+    class="newsletter-form search-box"
+    style="max-width:360px;background:#232526;border-color:#313537"
+>
+    {% csrf_token %}
+
+    <input
+        type="email"
+        name="email"
+        placeholder="Email manzilingiz"
+        aria-label="Email"
+        style="color:#fff"
+        required
+    >
+
+    <button
+        class="btn btn-primary"
+        type="submit"
+        style="min-height:38px;padding:8px 14px;cursor:pointer;"
+    >
+        Yuborish
+    </button>
+</form>
+
+{% if messages %}
+    {% for message in messages %}
+        <p style="
+            margin-top:12px;
+            color:#9b8cff;
+            font-size:14px;
+        ">
+            {{ message }}
+        </p>
+    {% endfor %}
+{% endif %}
+
+      </div>
+      <div><div class="footer-title" data-i18n="footer_pages">Sahifalar</div><div class="footer-links"><a href="{% url 'courses' %}">Kurslar</a><a href="{% url 'languages' %}">Tillar</a><a href="{% url 'about' %}">Biz haqimizda</a><a href="{% url 'contact' %}">Aloqa</a></div></div>
+      <div><div class="footer-title" data-i18n="footer_account">Hisob</div><div class="footer-links"><a href="{% url 'register' %}">Ro‘yxatdan o‘tish</a><a href="{% url 'login' %}">Kirish</a><a href="{% url 'dashboard' %}">Kabinet</a><form method="POST" action="{% url 'logout' %}" class="logout-form">{% csrf_token %}<button type="submit">Chiqish</button></form></div></div>
+      <div><div class="footer-title" data-i18n="footer_help">Yordam</div><div class="footer-links"><a href="mailto:hello@studyflow.uz">hello@studyflow.uz</a><a href="tel:+998901234567">+998 90 123 45 67</a><a href="{% url 'contact' %}">Savol yuborish</a></div></div>
+    </div>
+    <div class="footer-bottom"><span>© <span data-year></span> StudyFlow. <span data-i18n="footer_rights">Barcha huquqlar himoyalangan.</span></span><span>Toshkent, O‘zbekiston</span></div>
+  </div>
+</footer>
+<div class="toast" id="toast"></div>
+</div>
+<script src="{% static 'assets/js/app.js' %}"></script>
+</body>
+</html>

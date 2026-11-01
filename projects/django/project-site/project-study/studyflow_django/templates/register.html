@@ -1,0 +1,131 @@
+{% load static %}
+<!doctype html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="StudyFlow — zamonaviy o‘quv platformasi">
+    <title>Ro‘yxatdan o‘tish — StudyFlow</title>
+    <link rel="icon" href="{% static 'assets/images/logo.svg' %}" type="image/svg+xml">
+    <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
+</head>
+<body data-page="register" data-authenticated="{{ request.user.is_authenticated|yesno:'true,false' }}">
+<div class="page-shell">
+
+    <div class="nav-wrap">
+        <div class="container">
+            <nav class="navbar" aria-label="Asosiy navigatsiya">
+                <a class="brand" href="{% url 'home' %}"><span class="brand-mark">⌁</span><span>StudyFlow</span></a>
+                <div class="nav-links">
+                    <a class="nav-link" href="{% url 'home' %}" data-i18n="nav_home">Asosiy</a>
+                    <a class="nav-link" href="{% url 'courses' %}" data-i18n="nav_courses">Kurslar</a>
+                    <a class="nav-link" href="{% url 'languages' %}" data-i18n="nav_languages">Tillar</a>
+                    <a class="nav-link" href="{% url 'about' %}" data-i18n="nav_about">Biz haqimizda</a>
+                    <a class="nav-link" href="{% url 'contact' %}" data-i18n="nav_contact">Aloqa</a>
+                </div>
+                <div class="nav-actions">
+                    <select class="lang-select" aria-label="Tilni tanlang">
+                        <option value="uz">UZ</option>
+                        <option value="ru">RU</option>
+                        <option value="en">EN</option>
+                    </select>
+                    <a class="btn btn-outline desktop-auth" data-auth="guest" href="{% url 'login' %}"
+                       data-i18n="nav_login">Kirish</a>
+                    <a class="btn btn-primary desktop-auth" data-auth="guest" href="{% url 'register' %}"
+                       data-i18n="nav_register">Ro‘yxatdan o‘tish</a>
+                    <a class="btn btn-dark desktop-auth hidden" data-auth="user" href="{% url 'dashboard' %}"
+                       data-i18n="nav_dashboard">Kabinet</a>
+                    <button class="icon-btn menu-toggle" aria-label="Menyuni ochish">☰</button>
+                </div>
+            </nav>
+        </div>
+    </div>
+
+    <main class="auth-section">
+        <div class="container">
+            <div class="auth-card">
+                <div class="eyebrow">Yangi hisob</div>
+                <h1>Ro‘yxatdan o‘tish</h1>
+                <p>O‘quv rejangiz va progress tizimingizni ishga tushiring.</p>
+
+
+                <form id="registerForm" method="POST" action="{% url 'register' %}">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                    <div class="form-status error" role="alert">{{ form.non_field_errors }}</div>
+                    {% endif %}
+                    <div class="field">
+                        <label for="registerName">Ism Familiya</label>
+                        <input id="registerName" name="name" type="text" value="{{ form.name.value|default_if_none:'' }}" autocomplete="name" maxlength="150" required>
+                        {% if form.name.errors %}<div class="form-status error" role="alert">{{ form.name.errors }}</div>{% endif %}
+                    </div>
+                    <div class="field">
+                        <label for="registerEmail">Email</label>
+                        <input id="registerEmail" name="email" type="email" value="{{ form.email.value|default_if_none:'' }}" autocomplete="email" maxlength="150" required>
+                        {% if form.email.errors %}<div class="form-status error" role="alert">{{ form.email.errors }}</div>{% endif %}
+                    </div>
+                    <div class="field">
+                        <label for="registerPassword">Parol (kamida 8 belgi)</label>
+                        <div class="password-row">
+                            <input id="registerPassword" name="password" type="password" minlength="8" autocomplete="new-password" required>
+                            <button class="password-toggle" type="button" aria-label="Parolni ko‘rsatish">👁</button>
+                        </div>
+                        {% if form.password.errors %}<div class="form-status error" role="alert">{{ form.password.errors }}</div>{% endif %}
+                    </div>
+                    <div class="field">
+                        <label for="registerConfirm">Parolni tasdiqlang</label>
+                        <div class="password-row">
+                            <input id="registerConfirm" name="confirm_password" type="password" minlength="8" autocomplete="new-password" required>
+                            <button class="password-toggle" type="button" aria-label="Parolni ko‘rsatish">👁</button>
+                        </div>
+                        {% if form.confirm_password.errors %}<div class="form-status error" role="alert">{{ form.confirm_password.errors }}</div>{% endif %}
+                    </div>
+                    <button class="btn btn-primary" type="submit">Ro‘yxatdan o‘tish →</button>
+                </form>
+
+
+                <div class="auth-alt">Hisobingiz bormi? <a href="{% url 'login' %}">Kirish</a></div></div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <a class="brand" href="{% url 'home' %}"><span class="brand-mark">⌁</span><span>StudyFlow</span></a>
+                    <p data-i18n="footer_text">Bilim olishni sodda, chiroyli va natijador qiladigan zamonaviy o‘quv
+                        platformasi.</p>
+                    <form action="{% url 'newsletter' %}" method="POST" class="newsletter-form search-box"
+                          style="max-width:360px;background:#232526;border-color:#313537">{% csrf_token %}
+                        <input type="email" placeholder="Email manzilingiz" name="email" required aria-label="Email" style="color:#fff">
+                        <button class="btn btn-primary" type="submit" style="min-height:38px;padding:8px 14px">
+                            Yuborish
+                        </button>
+                    </form>
+                </div>
+                <div>
+                    <div class="footer-title" data-i18n="footer_pages">Sahifalar</div>
+                    <div class="footer-links"><a href="{% url 'courses' %}">Kurslar</a><a href="{% url 'languages' %}">Tillar</a><a
+                            href="{% url 'about' %}">Biz haqimizda</a><a href="{% url 'contact' %}">Aloqa</a></div>
+                </div>
+                <div>
+                    <div class="footer-title" data-i18n="footer_account">Hisob</div>
+                    <div class="footer-links"><a href="{% url 'register' %}">Ro‘yxatdan o‘tish</a><a
+                            href="{% url 'login' %}">Kirish</a><a href="{% url 'dashboard' %}">Kabinet</a><form method="POST" action="{% url 'logout' %}" class="logout-form">{% csrf_token %}<button type="submit">Chiqish</button></form></div>
+                </div>
+                <div>
+                    <div class="footer-title" data-i18n="footer_help">Yordam</div>
+                    <div class="footer-links"><a href="mailto:hello@studyflow.uz">hello@studyflow.uz</a><a
+                            href="tel:+998901234567">+998 90 123 45 67</a><a href="{% url 'contact' %}">Savol
+                        yuborish</a></div>
+                </div>
+            </div>
+            <div class="footer-bottom"><span>© <span data-year></span> StudyFlow. <span data-i18n="footer_rights">Barcha huquqlar himoyalangan.</span></span><span>Toshkent, O‘zbekiston</span>
+            </div>
+        </div>
+    </footer>
+    <div class="toast" id="toast"></div>
+</div>
+<script src="{% static 'assets/js/app.js' %}"></script>
+</body>
+</html>

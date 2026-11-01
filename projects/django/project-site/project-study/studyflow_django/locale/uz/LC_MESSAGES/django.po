@@ -1,0 +1,444 @@
+# StudyFlow admin — Django tarjimasida yetishmagan o‘zbekcha matnlar.
+# O‘zgartirgandan keyin: python manage.py compilemessages -l uz
+msgid ""
+msgstr ""
+"Project-Id-Version: studyflow\n"
+"PO-Revision-Date: 2026-10-19 21:00+0500\n"
+"Last-Translator: StudyFlow\n"
+"Language-Team: Uzbek\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: uz\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "Home"
+msgstr "Bosh sahifa"
+
+msgid "Log in"
+msgstr "Kirish"
+
+msgid "Log in again"
+msgstr "Qayta kirish"
+
+msgid "Breadcrumbs"
+msgstr "Navigatsiya yo‘li"
+
+msgid "Skip to main content"
+msgstr "Asosiy kontentga o‘tish"
+
+msgid "Sidebar"
+msgstr "Yon panel"
+
+msgid "Filter navigation items"
+msgstr "Bo‘limlarni filtrlash"
+
+msgid "Start typing to filter…"
+msgstr "Bo‘lim qidirish…"
+
+msgid "Models in the %(name)s application"
+msgstr "%(name)s bo‘limlari"
+
+msgid "%(app)s administration"
+msgstr "%(app)s boshqaruvi"
+
+msgid "Page not found"
+msgstr "Sahifa topilmadi"
+
+msgid "We’re sorry, but the requested page could not be found."
+msgstr "Kechirasiz, so‘ralgan sahifa topilmadi."
+
+msgid "You don’t have permission to view or edit anything."
+msgstr "Sizda hech narsani ko‘rish yoki tahrirlash huquqi yo‘q."
+
+msgid "Recent actions"
+msgstr "So‘nggi amallar"
+
+msgid "My actions"
+msgstr "Mening amallarim"
+
+msgid "None available"
+msgstr "Hozircha yo‘q"
+
+msgid "Added:"
+msgstr "Qo‘shildi:"
+
+msgid "Changed:"
+msgstr "O‘zgartirildi:"
+
+msgid "Deleted:"
+msgstr "O‘chirildi:"
+
+msgid "Unknown content"
+msgstr "Noma’lum kontent"
+
+msgid "Thanks for spending some quality time with the web site today."
+msgstr "Bugun saytga vaqt ajratganingiz uchun rahmat."
+
+msgid "You are authenticated as %(username)s, but are not authorized to access this page. Would you like to login to a different account?"
+msgstr "Siz %(username)s sifatida kirgansiz, lekin bu sahifaga kirish huquqingiz yo‘q. Boshqa akkaunt bilan kirmoqchimisiz?"
+
+msgid "Forgotten your login credentials?"
+msgstr "Login yoki parolni unutdingizmi?"
+
+msgid "Select %s to change"
+msgstr "O‘zgartirish uchun %s tanlang"
+
+msgid "Select %s to view"
+msgstr "Ko‘rish uchun %s tanlang"
+
+msgid "Add %(name)s"
+msgstr "%(name)s qo‘shish"
+
+msgid "Add %s"
+msgstr "%s qo‘shish"
+
+msgid "View %s"
+msgstr "%sni ko‘rish"
+
+msgid "Change %s"
+msgstr "%sni o‘zgartirish"
+
+msgid "Filter"
+msgstr "Filtr"
+
+msgid "Search"
+msgstr "Qidirish"
+
+msgid "Go"
+msgstr "Bajarish"
+
+msgid "Show all"
+msgstr "Barchasini ko‘rsatish"
+
+msgid "Hide counts"
+msgstr "Sonlarni yashirish"
+
+msgid "Show counts"
+msgstr "Sonlarni ko‘rsatish"
+
+msgid "Clear all filters"
+msgstr "Barcha filtrlarni tozalash"
+
+msgid " By %(filter_title)s "
+msgstr " %(filter_title)s bo‘yicha "
+
+msgid "Sorting priority: %(priority_number)s"
+msgstr "Saralash ustuvorligi: %(priority_number)s"
+
+msgid "Toggle sorting"
+msgstr "Saralashni almashtirish"
+
+msgid "%(full_result_count)s total"
+msgstr "jami %(full_result_count)s ta"
+
+msgid "%(counter)s result"
+msgid_plural "%(counter)s results"
+msgstr[0] "%(counter)s ta natija"
+
+msgid "0 of %(cnt)s selected"
+msgstr "%(cnt)s tadan 0 tasi tanlandi"
+
+msgid "%(total_count)s selected"
+msgid_plural "All %(total_count)s selected"
+msgstr[0] "%(total_count)s ta tanlandi"
+
+msgid "Click here to select the objects across all pages"
+msgstr "Barcha sahifalardagi obyektlarni tanlash uchun bosing"
+
+msgid "Select all %(total_count)s %(module_name)s"
+msgstr "Barchasini tanlash: %(total_count)s ta %(module_name)s"
+
+msgid "Clear selection"
+msgstr "Tanlovni bekor qilish"
+
+msgid "Select all objects on this page for an action"
+msgstr "Sahifadagi barcha obyektlarni tanlash"
+
+msgid "Select this object for an action - {}"
+msgstr "Amal uchun tanlash — {}"
+
+msgid "Delete selected %(verbose_name_plural)s"
+msgstr "Tanlangan %(verbose_name_plural)sni o‘chirish"
+
+msgid "Items must be selected in order to perform actions on them. No items have been changed."
+msgstr "Amal bajarish uchun avval obyektlarni tanlang. Hech narsa o‘zgartirilmadi."
+
+msgid "No action selected."
+msgstr "Hech qanday amal tanlanmadi."
+
+msgid "%(count)s %(name)s was changed successfully."
+msgid_plural "%(count)s %(name)s were changed successfully."
+msgstr[0] "%(count)s ta %(name)s muvaffaqiyatli o‘zgartirildi."
+
+msgid "Successfully deleted %(count)d %(items)s."
+msgstr "%(count)d ta %(items)s muvaffaqiyatli o‘chirildi."
+
+msgid "Save as new"
+msgstr "Yangi sifatida saqlash"
+
+msgid "Save and add another"
+msgstr "Saqlab, yana qo‘shish"
+
+msgid "Save and continue editing"
+msgstr "Saqlab, davom ettirish"
+
+msgid "Save and view"
+msgstr "Saqlab, ko‘rish"
+
+msgid "Close"
+msgstr "Yopish"
+
+msgid "History"
+msgstr "Tarix"
+
+msgid "View on site"
+msgstr "Saytda ko‘rish"
+
+msgid "Please correct the error below."
+msgid_plural "Please correct the errors below."
+msgstr[0] "Iltimos, quyidagi xatolarni tuzating."
+
+msgid "Hold down “Control”, or “Command” on a Mac, to select more than one."
+msgstr "Bir nechtasini tanlash uchun “Control” (Mac’da “Command”) tugmasini bosib turing."
+
+msgid "Change selected %(model)s"
+msgstr "Tanlangan %(model)sni o‘zgartirish"
+
+msgid "Add another %(model)s"
+msgstr "Yana %(model)s qo‘shish"
+
+msgid "Delete selected %(model)s"
+msgstr "Tanlangan %(model)sni o‘chirish"
+
+msgid "View selected %(model)s"
+msgstr "Tanlangan %(model)sni ko‘rish"
+
+msgid "The {name} “{obj}” was added successfully."
+msgstr "{name} “{obj}” muvaffaqiyatli qo‘shildi."
+
+msgid "The {name} “{obj}” was changed successfully."
+msgstr "{name} “{obj}” muvaffaqiyatli o‘zgartirildi."
+
+msgid "You may edit it again below."
+msgstr "Uni quyida yana tahrirlashingiz mumkin."
+
+msgid "The {name} “{obj}” was added successfully. You may add another {name} below."
+msgstr "{name} “{obj}” muvaffaqiyatli qo‘shildi. Quyida yana qo‘shishingiz mumkin."
+
+msgid "The {name} “{obj}” was changed successfully. You may edit it again below."
+msgstr "{name} “{obj}” muvaffaqiyatli o‘zgartirildi. Uni quyida yana tahrirlashingiz mumkin."
+
+msgid "The {name} “{obj}” was changed successfully. You may add another {name} below."
+msgstr "{name} “{obj}” muvaffaqiyatli o‘zgartirildi. Quyida yana qo‘shishingiz mumkin."
+
+msgid "%(name)s with ID “%(key)s” doesn’t exist. Perhaps it was deleted?"
+msgstr "ID “%(key)s” bo‘lgan %(name)s topilmadi. Ehtimol, u o‘chirilgan."
+
+msgid "Change history: %s"
+msgstr "O‘zgarishlar tarixi: %s"
+
+msgid "Date/time"
+msgstr "Sana/vaqt"
+
+msgid "User"
+msgstr "Foydalanuvchi"
+
+msgid "Action"
+msgstr "Amal"
+
+msgid "entry"
+msgid_plural "entries"
+msgstr[0] "yozuv"
+
+msgid "This object doesn’t have a change history. It probably wasn’t added via this admin site."
+msgstr "Bu obyektning o‘zgarishlar tarixi yo‘q. Ehtimol, u admin panel orqali qo‘shilmagan."
+
+msgid "Added."
+msgstr "Qo‘shildi."
+
+msgid "Changed {fields}."
+msgstr "{fields} o‘zgartirildi."
+
+msgid "No fields changed."
+msgstr "Hech qanday maydon o‘zgartirilmadi."
+
+msgid "Added {name} “{object}”."
+msgstr "{name} “{object}” qo‘shildi."
+
+msgid "Changed {fields} for {name} “{object}”."
+msgstr "{name} “{object}”: {fields} o‘zgartirildi."
+
+msgid "Deleted {name} “{object}”."
+msgstr "{name} “{object}” o‘chirildi."
+
+msgid "Objects"
+msgstr "Obyektlar"
+
+msgid "Yes, I’m sure"
+msgstr "Ha, ishonchim komil"
+
+msgid "No, take me back"
+msgstr "Yo‘q, ortga qaytish"
+
+msgid "Delete multiple objects"
+msgstr "Bir nechta obyektni o‘chirish"
+
+msgid "Are you sure you want to delete the %(object_name)s \"%(escaped_object)s\"? All of the following related items will be deleted:"
+msgstr "%(object_name)s “%(escaped_object)s” o‘chirilsinmi? Quyidagi barcha bog‘liq elementlar ham o‘chiriladi:"
+
+msgid "Are you sure you want to delete the selected %(objects_name)s? All of the following objects and their related items will be deleted:"
+msgstr "Tanlangan %(objects_name)s o‘chirilsinmi? Quyidagi barcha obyektlar va ularga bog‘liq elementlar o‘chiriladi:"
+
+msgid "Deleting the %(object_name)s '%(escaped_object)s' would result in deleting related objects, but your account doesn't have permission to delete the following types of objects:"
+msgstr "%(object_name)s “%(escaped_object)s” o‘chirilsa, bog‘liq obyektlar ham o‘chadi, lekin sizda quyidagi turdagi obyektlarni o‘chirish huquqi yo‘q:"
+
+msgid "Deleting the %(object_name)s '%(escaped_object)s' would require deleting the following protected related objects:"
+msgstr "%(object_name)s “%(escaped_object)s”ni o‘chirish uchun quyidagi himoyalangan bog‘liq obyektlarni ham o‘chirish kerak:"
+
+msgid "Deleting the selected %(objects_name)s would result in deleting related objects, but your account doesn't have permission to delete the following types of objects:"
+msgstr "Tanlangan %(objects_name)s o‘chirilsa, bog‘liq obyektlar ham o‘chadi, lekin sizda quyidagi turdagi obyektlarni o‘chirish huquqi yo‘q:"
+
+msgid "Deleting the selected %(objects_name)s would require deleting the following protected related objects:"
+msgstr "Tanlangan %(objects_name)sni o‘chirish uchun quyidagi himoyalangan bog‘liq obyektlarni ham o‘chirish kerak:"
+
+msgid "Password change"
+msgstr "Parolni o‘zgartirish"
+
+msgid "Your password was changed."
+msgstr "Parolingiz o‘zgartirildi."
+
+msgid "Please enter your old password, for security’s sake, and then enter your new password twice so we can verify you typed it in correctly."
+msgstr "Xavfsizlik uchun avval eski parolingizni, so‘ng yangi parolni ikki marta kiriting."
+
+msgid "Change my password"
+msgstr "Parolimni o‘zgartirish"
+
+msgid "Old password"
+msgstr "Eski parol"
+
+msgid "New password"
+msgstr "Yangi parol"
+
+msgid "New password confirmation"
+msgstr "Yangi parolni tasdiqlang"
+
+msgid "Enter a new password for the user <strong>%(username)s</strong>."
+msgstr "<strong>%(username)s</strong> foydalanuvchisi uchun yangi parol kiriting."
+
+msgid "Authentication and Authorization"
+msgstr "Foydalanuvchilar va ruxsatlar"
+
+msgid "user"
+msgstr "Foydalanuvchi"
+
+msgid "users"
+msgstr "Foydalanuvchilar"
+
+msgid "group"
+msgstr "Guruh"
+
+msgid "groups"
+msgstr "Guruhlar"
+
+msgid "permission"
+msgstr "ruxsat"
+
+msgid "permissions"
+msgstr "ruxsatlar"
+
+msgid "user permissions"
+msgstr "foydalanuvchi ruxsatlari"
+
+msgid "username"
+msgstr "foydalanuvchi nomi"
+
+msgid "first name"
+msgstr "ism"
+
+msgid "last name"
+msgstr "familiya"
+
+msgid "email address"
+msgstr "email manzil"
+
+msgid "staff status"
+msgstr "staff maqomi"
+
+msgid "superuser status"
+msgstr "super admin maqomi"
+
+msgid "active"
+msgstr "faol"
+
+msgid "date joined"
+msgstr "ro‘yxatdan o‘tgan sana"
+
+msgid "last login"
+msgstr "oxirgi kirish"
+
+msgid "name"
+msgstr "nomi"
+
+msgid "Permissions"
+msgstr "Ruxsatlar"
+
+msgid "Personal info"
+msgstr "Shaxsiy ma’lumotlar"
+
+msgid "Important dates"
+msgstr "Muhim sanalar"
+
+msgid "Designates whether the user can log into this admin site."
+msgstr "Foydalanuvchi admin panelga kira olishini belgilaydi."
+
+msgid "Designates that this user has all permissions without explicitly assigning them."
+msgstr "Bu foydalanuvchiga barcha ruxsatlar alohida biriktirilmasdan beriladi."
+
+msgid "Designates whether this user should be treated as active. Unselect this instead of deleting accounts."
+msgstr "Foydalanuvchi faolligini belgilaydi. Akkauntni o‘chirish o‘rniga shu belgini olib tashlang."
+
+msgid "The groups this user belongs to. A user will get all permissions granted to each of their groups."
+msgstr "Foydalanuvchi a’zo bo‘lgan guruhlar. U har bir guruhga berilgan barcha ruxsatlarni oladi."
+
+msgid "Specific permissions for this user."
+msgstr "Ushbu foydalanuvchi uchun alohida ruxsatlar."
+
+msgid "Reset password"
+msgstr "Parolni tiklash"
+
+msgid "Set password"
+msgstr "Parol o‘rnatish"
+
+msgid "Set password: %s"
+msgstr "Parol o‘rnatish: %s"
+
+msgid "No password set."
+msgstr "Parol o‘rnatilmagan."
+
+msgid "Invalid password format or unknown hashing algorithm."
+msgstr "Parol formati noto‘g‘ri yoki xeshlash algoritmi noma’lum."
+
+msgid "Password-based authentication"
+msgstr "Parol orqali kirish"
+
+msgid "Password-based authentication was disabled."
+msgstr "Parol orqali kirish o‘chirildi."
+
+msgid "Enabled"
+msgstr "Yoqilgan"
+
+msgid "Disabled"
+msgstr "O‘chirilgan"
+
+msgid "Raw passwords are not stored, so there is no way to see the user’s password."
+msgstr "Parollar ochiq holda saqlanmaydi, shuning uchun foydalanuvchi parolini ko‘rib bo‘lmaydi."
+
+msgid "Password confirmation"
+msgstr "Parolni tasdiqlang"
+
+msgid "Enter the same password as before, for verification."
+msgstr "Tekshirish uchun yuqoridagi parolni qayta kiriting."
+
+msgid "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only."
+msgstr "Majburiy. 150 belgigacha. Faqat harflar, raqamlar va @/./+/-/_ belgilari."

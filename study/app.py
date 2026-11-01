@@ -17,8 +17,8 @@ PAT = {'once': 'Bir marta', 'daily': 'Har kuni', 'every2': 'Kunora', 'odd': 'Toq
 DAYS = ['Du', 'Se', 'Chor', 'Pay', 'Ju', 'Sha', 'Yak']
 STAT = {'sent': ('📨 Yuborildi — tekshirilmoqda', 'info'), 'graded': ('✅ Qabul qilindi', 'ok'),
         'rejected': ('❌ Rad etildi — qayta topshiring', 'bad'), 'reopened': ('↩️ Bekor qilindi — qayta topshiring', 'warn')}
-DEF = {'shop': '1', 'rating': '1', 'trate': '1', 'chat': '1', 'bonus': '1', 'force_pw': '1', 'paused': '0'}
-GATE = {'shop': 'shop', 'buy': 'shop', 'rating': 'rating', 'teachers': 'trate', 'rate_teacher': 'trate', 'messages': 'chat', 'thread': 'chat', 'course_chat': 'chat'}
+DEF = {'shop': '1', 'rating': '1', 'trate': '1', 'chat': '1', 'bonus': '1', 'force_pw': '1', 'games': '1', 'paused': '0'}
+GATE = {'shop': 'shop', 'buy': 'shop', 'rating': 'rating', 'teachers': 'trate', 'rate_teacher': 'trate', 'messages': 'chat', 'thread': 'chat', 'course_chat': 'chat', 'games': 'games', 'game_play': 'games', 'play_tick': 'games', 'game_buy': 'games'}
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY, username TEXT UNIQUE, pw TEXT, role TEXT, first TEXT DEFAULT '', last TEXT DEFAULT '', avatar TEXT DEFAULT '', bg TEXT DEFAULT '');
@@ -57,6 +57,11 @@ CREATE TABLE IF NOT EXISTS ch_done(challenge_id INTEGER, student_id INTEGER, at 
 CREATE TABLE IF NOT EXISTS qrtok(token TEXT PRIMARY KEY, course_id INTEGER, day TEXT, exp REAL);
 CREATE TABLE IF NOT EXISTS sessions(id TEXT PRIMARY KEY, user_id INTEGER, ua TEXT, ip TEXT, at TEXT);
 CREATE TABLE IF NOT EXISTS login_fail(k TEXT PRIMARY KEY, n INTEGER, until REAL);
+CREATE TABLE IF NOT EXISTS plays(id INTEGER PRIMARY KEY, user_id INTEGER, reason TEXT, minutes REAL, at TEXT, UNIQUE(user_id, reason));
+CREATE TABLE IF NOT EXISTS play_used(user_id INTEGER PRIMARY KEY, seconds INTEGER DEFAULT 0);
+CREATE TABLE IF NOT EXISTS game_access(id INTEGER PRIMARY KEY, user_id INTEGER, game TEXT, until TEXT, src TEXT);
+CREATE TABLE IF NOT EXISTS game_offers(id INTEGER PRIMARY KEY, kind TEXT, game TEXT, days INTEGER DEFAULT 0, minutes INTEGER DEFAULT 0, price INTEGER, title TEXT, active INTEGER DEFAULT 1);
+CREATE TABLE IF NOT EXISTS scores(id INTEGER PRIMARY KEY, user_id INTEGER, game TEXT, score INTEGER, at TEXT);
 """
 
 def migrate():  # eski bazalarni ham yangilaydi
@@ -231,7 +236,7 @@ def dash():
     today = now().date(); info = {}
     if u['role'] == 'student':
         daily(u['id']); b = board()
-        info = dict(debt=debt(u['id']), att=att_pct(u['id'])[0], streak=streak(u['id']), bal=balance(u['id']), earn=earned(u['id']), total=len(b), todo=len(todo(u['id'])),
+        info = dict(gmin=play_left(u['id']) // 60, debt=debt(u['id']), att=att_pct(u['id'])[0], streak=streak(u['id']), bal=balance(u['id']), earn=earned(u['id']), total=len(b), todo=len(todo(u['id'])),
                     rank=next((i + 1 for i, x in enumerate(b) if x['id'] == u['id']), '-'))
     gn = q("SELECT COUNT(*) n FROM subs s JOIN posts p ON p.id=s.post_id JOIN courses c ON c.id=p.course_id WHERE s.status='sent' AND (c.teacher_id=? OR ?)", (u['id'], is_adm()), one=True)['n'] if u['role'] != 'student' else 0
     return render_template('dash.html', today=[l for l in lessons(1) if l[0] == today], news=news_rows(3),
@@ -390,7 +395,7 @@ def grade(i):
     if a == 'grade':
         try: sc = max(0, min(mx, int(request.form['score'])))
         except (ValueError, KeyError): flash("Ball kiriting"); return redirect(to)
-        q("UPDATE subs SET score=?, fb=?, status='graded', reason='', gat=? WHERE id=?", (sc, fb, ns(), i), w=True)
+        q("UPDATE subs SET score=?, fb=?, status='graded', reason='', gat=? WHERE id=?", (sc, fb, ns(), i), w=True); award_play(s['student_id'], 'hw%d' % i, gset('g_hw_min', '10'), "uy ishi")
         notify(s['student_id'], "'%s' uy ishingiz qabul qilindi: %d/%d ball" % (p['title'], sc, mx), to); flash("Qabul qilindi va baholandi ✅")
     elif a == 'reject':
         q("UPDATE subs SET score=NULL, fb='', status='rejected', reason=? WHERE id=?", (fb or "Sabab ko'rsatilmagan", i), w=True)
@@ -464,7 +469,7 @@ def settings():
 def shop():
     if request.method == 'POST' and allow('shop_manage'):
         f = request.form; q("INSERT INTO items(name,info,price,stock) VALUES(?,?,?,?)", (f['name'], f['info'], int(f['price']), int(f['stock'])), w=True)
-    return render_template('shop.html', items=q("SELECT * FROM items"), my=q("SELECT * FROM buys WHERE user_id=? ORDER BY id DESC", (me()['id'],)),
+    return render_template('shop.html', goffers=goffers_(), GN=GN, items=q("SELECT * FROM items"), my=q("SELECT * FROM buys WHERE user_id=? ORDER BY id DESC", (me()['id'],)),
                            all=q("SELECT b.*, u.username FROM buys b JOIN users u ON u.id=b.user_id ORDER BY b.id DESC LIMIT 50") if allow('shop_manage') else [])
 
 @app.route('/shop/buy/<int:i>', methods=['POST'])
@@ -690,7 +695,13 @@ Yakuniy imtihon|Итоговый экзамен|Final exam
 QR bilan davomat|Посещаемость по QR|QR attendance
 Mavzu|Тема|Theme
 To'lov nazorati|Контроль платежей|Payment control
-Parolni o'zgartiring|Смените пароль|Change your password"""
+Parolni o'zgartiring|Смените пароль|Change your password
+O'yin boshqaruvi|Управление играми|Game control
+O'yin do'koni|Магазин игр|Game shop
+O'yin vaqti|Игровое время|Play time
+O'yinlar|Игры|Games
+Tez hisob|Быстрый счёт|Quick math
+Ilon|Змейка|Snake"""
 TRS = sorted([tuple(l.split('|')) for l in _TR.strip().split('\n')], key=lambda x: -len(x[0]))
 
 @app.after_request
@@ -903,6 +914,7 @@ def quiz_submit(i):
     over = bool(z['minutes']) and el > z['minutes'] * 60 + 60
     score = 0 if over else round(good * z['maxscore'] / max(1, len(qs)))
     q("UPDATE qatt SET score=?, good=?, total=?, at=?, answers=? WHERE id=?", (score, good, len(qs), ns(), json.dumps(ans), att['id']), w=True)
+    if not over: award_play(me()['id'], 'quiz%d' % i, gset('g_quiz_min', '5'), "test")
     t = q("SELECT teacher_id FROM courses WHERE id=?", (z['course_id'],), one=True)['teacher_id']
     if t: notify(t, "%s testni yakunladi: %s (%d/%d)" % (me()['username'], z['title'], score, z['maxscore']), url_for('quiz', i=i))
     flash("⏰ Vaqt tugagan edi — ball berilmadi" if over else "✅ Test yakunlandi: %d/%d ball" % (score, z['maxscore']))
@@ -1136,13 +1148,14 @@ PERMS = [
                                 ('join_request', "Kursga yozilish so'rovi yuborish"), ('challenge_claim', "Vazifani bajardim deb belgilash"), ('poll_vote', "So'rovnomada ovoz berish"), ('cert_view', "Sertifikat olish")]),
  ('👁 Ko\'rish', [('view_rating', "Reytingni ko'rish"), ('view_shop', "Magazinni ko'rish"), ('view_teachers', "Ustozlar reytingini ko'rish"), ('view_news', "Yangiliklarni ko'rish"), ('library_view', "Kutubxonani ko'rish")]),
  ('💬 Muloqot', [('msg_use', "Shaxsiy xabarlar"), ('chat_use', "Kurs chatini o'qish"), ('chat_post', "Kurs chatiga yozish"), ('chat_moderate', "Chat xabarlarini o'chirish"), ('comment_post', "Dars ostida izoh yozish"), ('profile_edit', "Profilni tahrirlash")]),
+ ("🎮 O'yinlar", [('games_play', "O'yin o'ynash va o'yin vaqti/ruxsat sotib olish"), ('games_manage', "O'yinlarni boshqarish (vaqt, narx, sovg'a, yoqish/o'chirish)")]),
 ]
 PERM_KEYS = [k for _, items in PERMS for k, _ in items]
 VIEWS = "view_rating view_shop view_teachers view_news library_view poll_vote msg_use chat_use profile_edit"
 DEFP = {
- 'admin': _s("users_view users_create users_edit users_role users_import courses_manage groups_manage schedule_manage post_create plan_manage quiz_create attendance journal enroll_approve library_upload library_manage poll_create challenge_manage grade cert_issue reportcard_staff trate_manage payments_manage shop_manage news_post reports_view logs_view settings_manage pause_app chat_post chat_moderate comment_post " + VIEWS),
- 'teacher': _s("enroll_approve post_create plan_manage quiz_create attendance journal library_upload poll_create challenge_manage grade cert_issue reportcard_staff chat_post comment_post " + VIEWS),
- 'student': _s("submit_hw quiz_take shop_buy rate_teacher join_request challenge_claim cert_view chat_post comment_post " + VIEWS),
+ 'admin': _s("users_view users_create users_edit users_role users_import courses_manage groups_manage schedule_manage post_create plan_manage quiz_create attendance journal enroll_approve library_upload library_manage poll_create challenge_manage grade cert_issue reportcard_staff trate_manage payments_manage shop_manage news_post reports_view logs_view settings_manage pause_app chat_post chat_moderate comment_post games_play games_manage " + VIEWS),
+ 'teacher': _s("enroll_approve post_create plan_manage quiz_create attendance journal library_upload poll_create challenge_manage grade cert_issue reportcard_staff chat_post comment_post games_play " + VIEWS),
+ 'student': _s("submit_hw quiz_take shop_buy rate_teacher join_request challenge_claim cert_view chat_post comment_post games_play " + VIEWS),
  'parent': _s("cert_view " + VIEWS),
 }
 EPERM = {('users', 'GET'): 'users_view', ('users', 'POST'): 'users_create', ('users_import', '*'): 'users_import', ('courses', 'POST'): 'courses_manage', ('course', 'POST'): 'courses_manage',
@@ -1156,7 +1169,8 @@ EPERM = {('users', 'GET'): 'users_view', ('users', 'POST'): 'users_create', ('us
  ('payments', '*'): 'payments_manage', ('payments_csv', '*'): 'payments_manage', ('groups', '*'): 'groups_manage', ('group', '*'): 'groups_manage',
  ('library', 'GET'): 'library_view', ('library', 'POST'): 'library_upload', ('topics_add', '*'): 'plan_manage', ('topic_toggle', '*'): 'plan_manage', ('topic_del', '*'): 'plan_manage',
  ('join_course', '*'): 'join_request', ('requests', '*'): 'enroll_approve', ('request_act', '*'): 'enroll_approve', ('polls', 'POST'): 'poll_create', ('poll_vote', '*'): 'poll_vote',
- ('challenges', 'POST'): 'challenge_manage', ('challenge_claim', '*'): 'challenge_claim', ('challenge_review', '*'): 'challenge_manage', ('storage', '*'): 'storage_manage', ('backup_dl', '*'): 'backup'}
+ ('challenges', 'POST'): 'challenge_manage', ('challenge_claim', '*'): 'challenge_claim', ('challenge_review', '*'): 'challenge_manage', ('storage', '*'): 'storage_manage', ('backup_dl', '*'): 'backup', ('games', '*'): 'games_play', ('game_play', '*'): 'games_play', ('play_tick', '*'): 'games_play',
+ ('game_score', '*'): 'games_play', ('game_buy', '*'): 'games_play', ('games_admin', '*'): 'games_manage'}
 
 def _pc():
     if 'pc' not in g: g.pc = {(r['scope'], r['ref'], r['k']): r['val'] for r in q("SELECT * FROM perms")}
@@ -1666,6 +1680,164 @@ def backup_dl(name):
     if not os.path.exists(p): abort(404)
     log("Zaxira yuklab olindi: " + name); return send_file(p, as_attachment=True, download_name=name)
 
+# ===================== 4-BOSQICH: O'YINLAR =====================
+GAMES = {'snake': ('🐍', 'Ilon', "Olma yig'ing, devorga va o'zingizga urilmang!"),
+         '2048': ('🔢', '2048', "Bir xil sonlarni birlashtirib 2048 ga yeting"),
+         'math': ('⚡', 'Tez hisob', "60 soniyada iloji boricha ko'p misol yeching"),
+         'diamond': ('💎', 'Diamond Quest', "G'orni qazing, olmoslarni yig'ing, yirtqichlardan qoching va sehrli sandiqlarni oching!")}
+GN = {k: v[1] for k, v in GAMES.items()}
+CAP = {'snake': 2000, '2048': 2000000, 'math': 500, 'diamond': 20000}
+
+def gset(k, d=None):
+    r = q("SELECT v FROM settings WHERE k=?", (k,), one=True); return r['v'] if r else d
+def game_on(key): return gset('g_' + key, '1') == '1'
+
+def play_left(uid):
+    m = q("SELECT COALESCE(SUM(minutes),0) s FROM plays WHERE user_id=?", (uid,), one=True)['s']
+    u = q("SELECT seconds FROM play_used WHERE user_id=?", (uid,), one=True)
+    return max(0, int(m * 60) - (u['seconds'] if u else 0))
+
+def has_access(uid, key):
+    return bool(q("SELECT 1 FROM game_access WHERE user_id=? AND game IN (?, 'all') AND (until IS NULL OR until>=?)", (uid, key, now().strftime('%Y-%m-%d')), one=True))
+
+def game_mode(u, key):
+    if u['role'] != 'student': return ('free', 0)
+    if has_access(u['id'], key): return ('access', 0)
+    l = play_left(u['id']); return ('time', l) if l > 0 else ('locked', 0)
+
+def award_play(uid, reason, minutes, why):
+    try: minutes = float(minutes)
+    except (TypeError, ValueError): return
+    if minutes <= 0: return
+    if q("INSERT OR IGNORE INTO plays(user_id,reason,minutes,at) VALUES(?,?,?,?)", (uid, reason, minutes, ns()), w=True):
+        notify(uid, "🎮 +%g daqiqa o'yin vaqti (%s)" % (minutes, why), '/games')
+
+def goffers_():
+    return q("SELECT * FROM game_offers WHERE active=1 ORDER BY price") if (st()['games'] == '1' and allow('games_play')) else []
+
+def seed_games():
+    if not q("SELECT 1 FROM game_offers", one=True):
+        for kind, game, days, mn, price, title in [('time', 'all', 0, 30, 40, "30 daqiqa o'yin vaqti"), ('time', 'all', 0, 120, 120, "2 soat o'yin vaqti"),
+                                                   ('access', 'snake', 7, 0, 150, "Ilon — 7 kun cheksiz"), ('access', '2048', 0, 0, 600, "2048 — umrbod"),
+                                                   ('access', 'all', 30, 0, 400, "Barcha o'yinlar — 30 kun")]:
+            q("INSERT INTO game_offers(kind,game,days,minutes,price,title) VALUES(?,?,?,?,?,?)", (kind, game, days, mn, price, title), w=True)
+def seed_diamond():
+    if gset('seed_diamond') != '1':
+        for kind, game, days, mn, price, title in [('access', 'diamond', 7, 0, 200, "Diamond Quest — 7 kun cheksiz"), ('access', 'diamond', 0, 0, 800, "Diamond Quest — umrbod")]:
+            q("INSERT INTO game_offers(kind,game,days,minutes,price,title) VALUES(?,?,?,?,?,?)", (kind, game, days, mn, price, title), w=True)
+        q("INSERT OR REPLACE INTO settings(k,v) VALUES('seed_diamond','1')", w=True)
+
+def _qjson(u):  # sandiq savollari: o'quvchi kurslaridagi test savollaridan
+    ids = [c['id'] for c in my_courses()]
+    if not ids: return '[]'
+    rows = q("SELECT qq.q, qq.a, qq.b, qq.c, qq.d, qq.ans FROM qq JOIN quizzes z ON z.id=qq.quiz_id WHERE z.course_id IN (%s) ORDER BY RANDOM() LIMIT 20" % ','.join('?' * len(ids)), ids)
+    out = [{'q': r['q'], 'o': [r['a'], r['b'], r['c'], r['d']], 'c': 'ABCD'.index(r['ans'])} for r in rows]
+    return json.dumps(out, ensure_ascii=False).replace('<', '\\u003c')
+
+seed_games(); seed_diamond()
+
+def _best(uid, key): return q("SELECT MAX(score) m FROM scores WHERE user_id=? AND game=?", (uid, key), one=True)['m'] or 0
+
+@app.route('/games')
+@need()
+def games():
+    u = me(); rows = []; today = now().strftime('%Y-%m-%d')
+    for k, (ic, nm, ds) in GAMES.items():
+        if not game_on(k) and not allow('games_manage'): continue
+        mode, left = game_mode(u, k)
+        top = q("SELECT MAX(s.score) m, u.username, u.first, u.last FROM scores s JOIN users u ON u.id=s.user_id WHERE s.game=? GROUP BY s.user_id ORDER BY m DESC LIMIT 5", (k,))
+        rows.append(dict(k=k, ic=ic, nm=nm, ds=ds, mode=mode, left=left, best=_best(u['id'], k), top=top, on=game_on(k)))
+    acc = q("SELECT * FROM game_access WHERE user_id=? AND (until IS NULL OR until>=?) ORDER BY id DESC", (u['id'], today))
+    return render_template('games.html', rows=rows, offers=q("SELECT * FROM game_offers WHERE active=1 ORDER BY price"), acc=acc, left=play_left(u['id']), GN=GN,
+                           hw=gset('g_hw_min', '10'), qz=gset('g_quiz_min', '5'), bal=balance(u['id']))
+
+@app.route('/games/play/<key>')
+@need()
+def game_play(key):
+    if key not in GAMES: abort(404)
+    u = me()
+    if not game_on(key) and not allow('games_manage'): flash("Bu o'yin o'chirilgan"); return redirect(url_for('games'))
+    mode, left = game_mode(u, key)
+    if mode == 'locked': flash("O'yin vaqtingiz tugagan. Uy ishi bajaring yoki do'kondan sotib oling 🎮"); return redirect(url_for('games'))
+    session['gt'] = time.time(); session['gk'] = key
+    return render_template('game.html', key=key, g=GAMES[key], mode=mode, left=left, best=_best(u['id'], key), tok=session['_t'], qjson=_qjson(u) if key == 'diamond' else '[]')
+
+@app.route('/games/tick', methods=['POST'])
+@need()
+def play_tick():
+    u = me(); key = request.form.get('g')
+    if key not in GAMES or session.get('gk') != key: return {'mode': 'locked', 'left': 0}
+    t = time.time(); d = round(min(max(t - session.get('gt', t), 0), 20)); session['gt'] = t
+    mode, left = game_mode(u, key)
+    if mode == 'time':
+        if d: q("INSERT INTO play_used(user_id,seconds) VALUES(?,?) ON CONFLICT(user_id) DO UPDATE SET seconds=seconds+?", (u['id'], d, d), w=True)
+        left = play_left(u['id']); mode = 'time' if left > 0 else 'locked'
+    return {'mode': mode, 'left': left}
+
+@app.route('/games/score', methods=['POST'])
+@need()
+def game_score():
+    key = request.form.get('g')
+    if key not in GAMES or session.get('gk') != key: return {'ok': False}
+    try: sc = max(0, min(CAP[key], int(float(request.form.get('s', 0)))))
+    except ValueError: sc = 0
+    if sc > 0: q("INSERT INTO scores(user_id,game,score,at) VALUES(?,?,?,?)", (me()['id'], key, sc, ns()), w=True)
+    return {'ok': True, 'best': _best(me()['id'], key)}
+
+@app.route('/games/buy/<int:i>', methods=['POST'])
+@need('student')
+def game_buy(i):
+    o = q("SELECT * FROM game_offers WHERE id=? AND active=1", (i,), one=True) or abort(404); u = me()
+    if balance(u['id']) < o['price']: flash("Ball yetarli emas"); return redirect(request.referrer if request.referrer and request.host in request.referrer else url_for('games'))
+    bid = q("INSERT INTO buys(user_id,item_id,item,price,at,given) VALUES(?,?,?,?,?,1)", (u['id'], -i, "🎮 " + o['title'], o['price'], ns()), w=True)
+    if o['kind'] == 'time':
+        q("INSERT INTO plays(user_id,reason,minutes,at) VALUES(?,?,?,?)", (u['id'], 'buy%d' % bid, o['minutes'], ns()), w=True); flash("✅ +%d daqiqa o'yin vaqti!" % o['minutes'])
+    else:
+        until = None if not o['days'] else (now().date() + timedelta(days=o['days'])).isoformat()
+        q("INSERT INTO game_access(user_id,game,until,src) VALUES(?,?,?,'shop')", (u['id'], o['game'], until), w=True); flash("✅ O'yin ochildi: " + o['title'])
+    return redirect(url_for('games'))
+
+@app.route('/games/manage', methods=['GET', 'POST'], endpoint='games_admin')
+@need()
+def games_admin():
+    if request.method == 'POST':
+        f = request.form; a = f.get('a')
+        if a == 'settings':
+            for k in GAMES: q("INSERT OR REPLACE INTO settings(k,v) VALUES(?,?)", ('g_' + k, '1' if f.get('on_' + k) else '0'), w=True)
+            for k, fk in (('g_hw_min', 'hw'), ('g_quiz_min', 'qz')):
+                try: v = max(0.0, min(600.0, float(f.get(fk) or 0)))
+                except ValueError: v = 0.0
+                q("INSERT OR REPLACE INTO settings(k,v) VALUES(?,?)", (k, str(v)), w=True)
+        elif a == 'offer':
+            try: days = max(0, int(f.get('days') or 0)); mn = max(0, int(f.get('minutes') or 0)); price = max(0, int(f.get('price') or 0))
+            except ValueError: days = mn = price = 0
+            kind = 'time' if f.get('kind') == 'time' else 'access'; game = f.get('game') if f.get('game') in GAMES else 'all'
+            if f.get('title', '').strip() and (kind == 'access' or mn > 0):
+                q("INSERT INTO game_offers(kind,game,days,minutes,price,title) VALUES(?,?,?,?,?,?)", (kind, game, days, mn, price, f['title'].strip()[:80]), w=True)
+            else: flash("Nom va (vaqt uchun) daqiqani kiriting"); return redirect(url_for('games_admin'))
+        elif a == 'otoggle': q("UPDATE game_offers SET active=1-active WHERE id=?", (f.get('id', type=int),), w=True)
+        elif a == 'odel': q("DELETE FROM game_offers WHERE id=?", (f.get('id', type=int),), w=True)
+        elif a == 'revoke': q("DELETE FROM game_access WHERE id=?", (f.get('id', type=int),), w=True)
+        elif a == 'grant':
+            sid = f.get('sid', type=int)
+            if not q("SELECT 1 FROM users WHERE id=? AND role='student'", (sid,), one=True): abort(400)
+            try: mn = float(f.get('minutes') or 0)
+            except ValueError: mn = 0
+            if mn: q("INSERT INTO plays(user_id,reason,minutes,at) VALUES(?,?,?,?)", (sid, 'grant%d' % int(time.time() * 1000), mn, ns()), w=True)
+            gm = f.get('game')
+            if gm and (gm == 'all' or gm in GAMES):
+                days = max(0, f.get('days', type=int) or 0); until = None if days <= 0 else (now().date() + timedelta(days=days)).isoformat()
+                q("INSERT INTO game_access(user_id,game,until,src) VALUES(?,?,?,'admin')", (sid, gm, until), w=True)
+            if mn or gm: notify(sid, "🎁 Sizga o'yin vaqti/ruxsat berildi", '/games')
+        log("O'yinlar: " + str(a)); flash("Saqlandi ✅"); return redirect(url_for('games_admin'))
+    stats = []
+    for s_ in q("SELECT * FROM users WHERE role='student' ORDER BY first, username"):
+        e = q("SELECT COALESCE(SUM(minutes),0) m FROM plays WHERE user_id=?", (s_['id'],), one=True)['m']; u_ = q("SELECT seconds FROM play_used WHERE user_id=?", (s_['id'],), one=True)
+        stats.append(dict(s=s_, earned=round(e, 1), used=round((u_['seconds'] if u_ else 0) / 60, 1), left=play_left(s_['id']) // 60, best=q("SELECT COUNT(*) n FROM scores WHERE user_id=?", (s_['id'],), one=True)['n']))
+    return render_template('games_admin.html', GAMES=GAMES, GN=GN, on={k: game_on(k) for k in GAMES}, hw=float(gset('g_hw_min', '10')), qz=float(gset('g_quiz_min', '5')),
+                           offers=q("SELECT * FROM game_offers ORDER BY price"), stats=stats, students=[x['s'] for x in stats],
+                           acc=q("SELECT a.*, u.username, u.first, u.last FROM game_access a JOIN users u ON u.id=a.user_id WHERE a.until IS NULL OR a.until>=? ORDER BY a.id DESC", (now().strftime('%Y-%m-%d'),)))
+
 # ---------- shablonlar ----------
 BASE = """{% from 'm' import ava %}<!doctype html><html lang=uz><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
 <title>{% block t %}O'quv markaz{% endblock %}</title><link rel=stylesheet href="{{ url_for('static', filename='style.css') }}?v=4"><link rel=manifest href="/manifest.json"><meta name=theme-color content="#6c5ce7"><link rel=icon href="/icon.svg"><script>try{var d=document.documentElement,t=localStorage.getItem('th'),a=localStorage.getItem('ac');if(t)d.dataset.theme=t;if(a)d.dataset.accent=a}catch(e){}
@@ -1679,7 +1851,7 @@ function setAc(a){try{if(a)localStorage.setItem('ac',a);else localStorage.remove
 {% if allow('view_teachers') and (S('trate')=='1' or adm) %}<a href="/teachers">⭐ Ustozlar{{ ' 🔒' if S('trate')!='1' }}</a>{% endif %}
 {% if allow('view_shop') and (S('shop')=='1' or adm) %}<a href="/shop">🛒 Magazin{{ ' 🔒' if S('shop')!='1' }}</a>{% endif %}
 {% if allow('view_news') %}<a href="/news">📰 Yangiliklar</a>{% endif %}{% if S('chat')=='1' and allow('msg_use') %}<a href="/messages">✉️ Xabarlar{% if munread %}<b class=badge>{{ munread }}</b>{% endif %}</a>{% endif %}
-{% if allow('library_view') %}<a href="/library">📚 Kutubxona</a>{% endif %}<a href="/polls">🗳 So'rovnomalar</a>{% if me.role!='parent' %}<a href="/challenges">🎯 Vazifalar</a>{% endif %}
+{% if allow('library_view') %}<a href="/library">📚 Kutubxona</a>{% endif %}<a href="/polls">🗳 So'rovnomalar</a>{% if me.role!='parent' %}<a href="/challenges">🎯 Vazifalar</a>{% endif %}{% if allow('games_play') and (S('games')=='1' or adm) %}<a href="/games">🎮 O'yinlar{{ ' 🔒' if S('games')!='1' }}</a>{% endif %}{% if allow('games_manage') %}<a href="/games/manage">🕹 O'yin boshqaruvi</a>{% endif %}
 {% if me.role in ['student','parent'] %}<a href="/my-fees">💳 To'lovlarim</a>{% endif %}{% if allow('payments_manage') %}<a href="/payments">💳 To'lovlar</a>{% endif %}{% if allow('groups_manage') %}<a href="/groups">🧩 Guruhlar</a>{% endif %}{% if allow('enroll_approve') %}<a href="/requests">📥 So'rovlar</a>{% endif %}
 {% if allow('users_view') %}<a href="/users">👥 Foydalanuvchilar</a>{% endif %}{% if allow('reports_view') %}<a href="/reports">📈 Hisobotlar</a>{% endif %}{% if allow('logs_view') %}<a href="/logs">🧾 Tarix</a>{% endif %}
 {% if me.role=='boss' %}<a href="/permissions">🔐 Huquqlar</a>{% endif %}{% if allow('settings_manage') %}<a href="/settings">⚙️ Sozlamalar</a>{% endif %}{% if allow('storage_manage') %}<a href="/storage">🗄 Xotira</a>{% endif %}{% if allow('backup') %}<a href="/backup">💾 Zaxira</a>{% endif %}
@@ -1728,7 +1900,7 @@ T = {'base': BASE, 'm': MEDIA,
 <div class=grid>
 {% if me.role=='student' %}<div class="card stat"><span>💰 Balans</span><div class=big>{{ info.bal }}</div><small>Jami yig'ilgan: {{ info.earn }}</small></div>
 <div class="card stat"><span>🏆 O'rin</span><div class=big>{{ info.rank }}<small>/{{ info.total }}</small></div></div>
-<a class="card stat" href="/my"><span>📝 Bajariladigan</span><div class=big>{{ info.todo }}</div><small>uy ishi</small></a><a class="card stat" href="/attendance"><span>📋 Davomat</span><div class=big>{{ info.att }}%</div></a><div class="card stat"><span>🔥 Seriya</span><div class=big>{{ info.streak }}<small> kun</small></div></div>{% if info.debt %}<a class="card stat" href="/my-fees"><span>💳 Qarzdorlik</span><div class=big style="color:var(--bad)">{{ info.debt }}</div><small>so'm</small></a>{% endif %}{% endif %}
+<a class="card stat" href="/my"><span>📝 Bajariladigan</span><div class=big>{{ info.todo }}</div><small>uy ishi</small></a><a class="card stat" href="/attendance"><span>📋 Davomat</span><div class=big>{{ info.att }}%</div></a><div class="card stat"><span>🔥 Seriya</span><div class=big>{{ info.streak }}<small> kun</small></div></div>{% if info.debt %}<a class="card stat" href="/my-fees"><span>💳 Qarzdorlik</span><div class=big style="color:var(--bad)">{{ info.debt }}</div><small>so'm</small></a>{% endif %}{% if S('games')=='1' and allow('games_play') %}<a class="card stat" href="/games"><span>🎮 O'yin vaqti</span><div class=big>{{ info.gmin }}<small> daq</small></div></a>{% endif %}{% endif %}
 {% if me.role!='student' %}<div class="card stat"><span>📨 Tekshirilmagan</span><div class=big>{{ grade_n }}</div><small>topshirilgan ish</small></div>{% endif %}
 {% for r,n in stats %}<div class="card stat"><span>{{ ROLES[r] }}</span><div class=big>{{ n }}</div></div>{% endfor %}</div>
 {% if me.role=='student' %}<div class=card><h3>🏅 Yutuqlarim</h3>{% for e,t,d in badges(me.id) %}<span class=tag title="{{ d }}">{{ e }} {{ t }}</span>{% else %}<span class=mut>Hali yutuq yo'q — uy ishlarini bajaring!</span>{% endfor %}</div>{% endif %}
@@ -1809,11 +1981,15 @@ T = {'base': BASE, 'm': MEDIA,
 <label class=opt><input type=checkbox name=trate {{ 'checked' if S('trate')=='1' }}> ⭐ Ustozlarni baholash tizimi</label>
 <label class=opt><input type=checkbox name=chat {{ 'checked' if S('chat')=='1' }}> ✉️ Xabarlar va kurs chati</label>
 <label class=opt><input type=checkbox name=bonus {{ 'checked' if S('bonus')=='1' }}> 🔥 Kunlik bonus va seriya</label>
-<label class=opt><input type=checkbox name=force_pw {{ 'checked' if S('force_pw')=='1' }}> 🔑 Admin bergan parolni birinchi kirishda almashtirish</label><hr>
+<label class=opt><input type=checkbox name=force_pw {{ 'checked' if S('force_pw')=='1' }}> 🔑 Admin bergan parolni birinchi kirishda almashtirish</label>
+<label class=opt><input type=checkbox name=games {{ 'checked' if S('games')=='1' }}> 🎮 O'yinlar bo'limi</label><hr>
 <h3>Ilovani to'xtatib turish</h3><label class=opt><input type=checkbox name=paused {{ 'checked' if S('paused')=='1' }}> ⏸ Ilovani to'xtatish (faqat adminlar kira oladi)</label>{% if me.role=='boss' %}<hr><h3>🤖 Telegram bot</h3><input name=tg_token placeholder="Bot token (@BotFather)" value="{{ tgtok }}"><small class=mut>Foydalanuvchi profilida chat ID kiritsa, bildirishnomalar Telegramga ham keladi.</small>{% endif %}<button class=wide>Saqlash</button></form>
 <form method=post action="/run-jobs" class=card>{{ csrf()|safe }}<h3>⏰ Avtomatik ishlar</h3><p class=mut>Eslatmalar (uy ishi muddati, dars, to'lov) va kunlik zaxira har kuni birinchi kirishda o'zi ishlaydi. Hozir qo'lda ishga tushirish:</p><button>▶ Hozir ishga tushirish</button></form>"""),
 'shop.html': P("""<h2>🛒 Magazin</h2>{% if me.role=='student' %}<div class="card stat"><span>💰 Ballaringiz</span><div class=big>{{ balance(me.id) }}</div></div>{% endif %}
 {% if allow('shop_manage') %}<div class=card><form method=post class=row>{{ csrf()|safe }}<input name=name placeholder=Nomi required><input name=info placeholder=Izoh><input type=number name=price placeholder=Narx(ball) required><input type=number name=stock value=-1 title="-1 = cheksiz"><button>Qo'shish</button></form></div>{% endif %}
+{% if goffers %}<h3>🎮 O'yin do'koni</h3><div class=grid style="margin-bottom:18px">{% for o in goffers %}<div class=card><h3>🎮 {{ o.title }}</h3>
+<p class=mut>{% if o.kind=='time' %}⏱ {{ o.minutes }} daqiqa o'yin vaqti{% else %}{{ GN[o.game] if o.game in GN else "Barcha o'yinlar" }} — {{ 'umrbod' if not o.days else (o.days ~ ' kun') }}{% endif %}</p><div class=big>{{ o.price }} <small>ball</small></div>
+{% if me.role=='student' %}<form method=post action="/games/buy/{{ o.id }}">{{ csrf()|safe }}<button class=wide>Sotib olish</button></form>{% endif %}</div>{% endfor %}</div>{% endif %}
 <div class=grid>{% for i in items %}<div class=card><h3>🎁 {{ i.name }}</h3><p class=mut>{{ i.info }}</p><div class=big>{{ i.price }} <small>ball</small></div><small class=mut>{{ 'Cheksiz' if i.stock<0 else 'Qoldi: ' ~ i.stock }}</small>
 {% if me.role=='student' and allow('shop_buy') %}<form method=post action="/shop/buy/{{ i.id }}">{{ csrf()|safe }}<button class=wide>Sotib olish</button></form>{% endif %}
 {% if allow('shop_manage') %}<form method=post action="/shop/edit/{{ i.id }}">{{ csrf()|safe }}<input name=name value="{{ i.name }}"><input name=info value="{{ i.info }}"><input type=number name=price value="{{ i.price }}"><input type=number name=stock value="{{ i.stock }}"><button>Saqlash</button></form>
@@ -1974,6 +2150,143 @@ button{margin:14px;padding:12px 24px;font-size:16px;border:0;border-radius:10px;
 <div class=card><h3>💾 Avtomatik zaxira nusxalar (oxirgi 7 kun)</h3>{% for f,sz in bks %}<p><a href="/backups/{{ f }}">⬇ {{ f }}</a> <small class=mut>{{ (sz/1024)|int }} KB</small></p>{% else %}<p class=mut>Hali nusxa yo'q (har kuni birinchi kirishda olinadi)</p>{% endfor %}</div>"""),
 })
 
+
+T.update({
+'games.html': P("""<h2>🎮 O'yinlar</h2>
+{% if me.role=='student' %}<div class=card><div class=row><div style="flex:1"><h3 style="margin:0">⏱ O'yin vaqti: <b>{{ left//60 }}</b> daqiqa</h3><small class=mut>Qabul qilingan uy ishi uchun <b>+{{ '%g'|format(hw|float) }}</b> daqiqa, yakunlangan test uchun <b>+{{ '%g'|format(qz|float) }}</b> daqiqa. Ballaringiz: <b>{{ bal }}</b></small></div></div>
+{% if acc %}<p>{% for a in acc %}<span class="tag ok">♾ {{ GN[a.game] if a.game in GN else "Barcha o'yinlar" }} — {{ 'umrbod' if not a.until else ('to ' ~ a.until) }}</span>{% endfor %}</p>{% endif %}</div>{% endif %}
+<div class=grid>{% for r in rows %}<div class=card><div style="font-size:46px">{{ r.ic }}</div><h3>{{ r.nm }}</h3><p class=mut>{{ r.ds }}</p>{% if not r.on %}<span class="tag bad">O'chirilgan</span>{% endif %}
+{% if r.mode=='free' %}<span class="tag ok">Cheksiz (xodim)</span>{% elif r.mode=='access' %}<span class="tag ok">♾ Ochilgan</span>{% elif r.mode=='time' %}<span class="tag warn">⏱ {{ r.left//60 }} daqiqa qoldi</span>{% else %}<span class="tag bad">🔒 Vaqt yo'q</span>{% endif %}
+{% if r.mode!='locked' %}<a class="btn wide" style="text-align:center;margin-top:10px" href="/games/play/{{ r.k }}">▶ O'ynash</a>{% else %}<p class=mut style="margin:10px 0 0">Uy ishi bajaring yoki pastdagi do'kondan oling</p>{% endif %}
+<p style="margin:12px 0 4px"><small class=mut>🏆 Rekordingiz: <b>{{ r.best }}</b></small></p>{% for t in r.top %}<small class=mut>{{ loop.index }}. {{ ((t.first ~ ' ' ~ t.last)|trim) or t.username }} — <b>{{ t.m }}</b></small><br>{% endfor %}</div>{% else %}<div class=card>Hozircha o'yin yo'q</div>{% endfor %}</div>
+{% if me.role=='student' and offers %}<h3 style="margin-top:22px">🛒 O'yin do'koni</h3><div class=grid>{% for o in offers %}<div class=card><h3>🎮 {{ o.title }}</h3><p class=mut>{% if o.kind=='time' %}⏱ {{ o.minutes }} daqiqa o'yin vaqti{% else %}{{ GN[o.game] if o.game in GN else "Barcha o'yinlar" }} — {{ 'umrbod' if not o.days else (o.days ~ ' kun cheksiz') }}{% endif %}</p>
+<div class=big>{{ o.price }} <small>ball</small></div><form method=post action="/games/buy/{{ o.id }}">{{ csrf()|safe }}<button class=wide {{ 'disabled' if bal<o.price }}>{{ 'Sotib olish' if bal>=o.price else 'Ball yetarli emas' }}</button></form></div>{% endfor %}</div>{% endif %}"""),
+'game.html': P("""<div class=hero><h2>{{ g[0] }} {{ g[1] }}</h2><p>{{ g[2] }}</p></div>
+<div class=card style="text-align:center"><div class=row style="justify-content:center;margin-bottom:10px"><span>Ball: <b id=sc style="font-size:22px">0</b></span><span>· Rekord: <b id=best>{{ best }}</b></span>
+{% if mode=='time' %}<span class="status warn" id=tm></span>{% elif mode=='access' %}<span class="status ok">♾ Cheksiz</span>{% else %}<span class=tag>Xodim — cheklovsiz</span>{% endif %}</div>
+<div style="position:relative;max-width:360px;margin:auto"><div id=stage></div>
+<div id=ov class=ovl style="display:none"><div><h2>Tugadi!</h2><p>Ball: <b id=ovs>0</b></p><button onclick="restart()">🔁 Qayta o'ynash</button></div></div>
+<div id=stt class=ovl><div><h2>{{ g[0] }} {{ g[1] }}</h2><p>{{ g[2] }}</p><button onclick="restart()">▶ Boshlash</button></div></div>
+<div id=end class=ovl style="display:none"><div><h2>⏱ O'yin vaqti tugadi</h2><p>Uy ishi bajaring yoki do'kondan sotib oling.</p><a class=btn href="/games">🎮 O'yinlar</a></div></div></div>
+{% if key in ['snake','diamond'] %}<div class=pad><span></span><button onclick="pad(0,-1)">▲</button><span></span><button onclick="pad(-1,0)">◀</button><button onclick="pad(0,1)">▼</button><button onclick="pad(1,0)">▶</button></div>{% endif %}</div>
+<p><a href="/games">← O'yinlar</a></p>
+<script>var KEY="{{ key }}",TOK="{{ tok }}",MODE="{{ mode }}",LEFT={{ left }},STOP=false,CURSC=function(){return 0};
+function setSc(n){document.getElementById('sc').textContent=n}
+function post(u,d){var f=new FormData();f.append('_t',TOK);for(var k in d)f.append(k,d[k]);return fetch(u,{method:'POST',body:f}).then(function(r){return r.json()})}
+function over(s){post('/games/score',{g:KEY,s:s}).then(function(r){if(r.ok&&r.best)document.getElementById('best').textContent=r.best});document.getElementById('ovs').textContent=s;document.getElementById('ov').style.display='flex'}
+function fmt(t){var m=Math.floor(t/60),s=t%60;return m+':'+(s<10?'0':'')+s}
+function showT(){if(MODE==='time')document.getElementById('tm').textContent='⏱ '+fmt(LEFT)}
+function timeUp(){STOP=true;document.getElementById('end').style.display='flex'}
+if(MODE==='time'){showT();setInterval(function(){if(STOP)return;LEFT=Math.max(0,LEFT-1);showT();if(LEFT<=0)timeUp()},1000)}
+setInterval(function(){if(STOP||document.hidden)return;post('/games/tick',{g:KEY}).then(function(r){if(r.mode==='locked'){LEFT=0;timeUp()}else if(r.mode==='time'){LEFT=r.left;showT()}})},10000);
+window.addEventListener('pagehide',function(){var s=CURSC();if(s>0&&navigator.sendBeacon){var f=new FormData();f.append('_t',TOK);f.append('g',KEY);f.append('s',s);navigator.sendBeacon('/games/score',f)}});
+function hideStart(){document.getElementById('stt').style.display='none';document.getElementById('ov').style.display='none'}
+function swipe(el,cb){var x0,y0;el.addEventListener('touchstart',function(e){x0=e.touches[0].clientX;y0=e.touches[0].clientY},{passive:true});el.addEventListener('touchend',function(e){var dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;if(Math.max(Math.abs(dx),Math.abs(dy))<24)return;if(Math.abs(dx)>Math.abs(dy))cb(dx>0?1:0);else cb(dy>0?3:2)},{passive:true})}
+</script>
+{% if key=='snake' %}<script>(function(){var N=16,S=20,c=document.createElement('canvas');c.width=c.height=N*S;c.style.cssText='max-width:100%;border-radius:14px;background:#0f172a;touch-action:none';document.getElementById('stage').appendChild(c);
+var x=c.getContext('2d'),sn=[{x:8,y:8}],dir={x:1,y:0},nd=dir,ap={x:12,y:8},sc=0,tmr,alive=false;
+function place(){do{ap={x:Math.floor(Math.random()*N),y:Math.floor(Math.random()*N)}}while(sn.some(function(p){return p.x==ap.x&&p.y==ap.y}))}
+function draw(){x.fillStyle='#0f172a';x.fillRect(0,0,c.width,c.height);x.fillStyle='#1e293b';for(var i=0;i<N;i++)for(var j=0;j<N;j++)if((i+j)%2)x.fillRect(i*S,j*S,S,S);
+x.font=(S-3)+'px serif';x.textBaseline='top';x.fillText('🍎',ap.x*S,ap.y*S+1);sn.forEach(function(p,i){x.fillStyle=i?'#22c55e':'#bbf7d0';x.fillRect(p.x*S+1,p.y*S+1,S-2,S-2)})}
+function step(){if(STOP||!alive)return;dir=nd;var h={x:sn[0].x+dir.x,y:sn[0].y+dir.y};
+if(h.x<0||h.y<0||h.x>=N||h.y>=N||sn.some(function(p){return p.x==h.x&&p.y==h.y})){alive=false;clearInterval(tmr);over(sc);return}
+sn.unshift(h);if(h.x==ap.x&&h.y==ap.y){sc++;setSc(sc);place();clearInterval(tmr);tmr=setInterval(step,Math.max(55,130-sc*3))}else sn.pop();draw()}
+window.restart=function(){hideStart();sn=[{x:8,y:8},{x:7,y:8},{x:6,y:8}];dir=nd={x:1,y:0};sc=0;alive=true;setSc(0);place();clearInterval(tmr);tmr=setInterval(step,130);draw()};
+window.pad=function(dx,dy){if(dx==-dir.x&&dy==-dir.y)return;nd={x:dx,y:dy}};
+document.addEventListener('keydown',function(e){var m={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1],a:[-1,0],d:[1,0],w:[0,-1],s:[0,1]}[e.key];if(m){pad(m[0],m[1]);e.preventDefault()}});
+swipe(c,function(d){var m=[[-1,0],[1,0],[0,-1],[0,1]][d];pad(m[0],m[1])});CURSC=function(){return alive?sc:0};draw()})();</script>
+{% elif key=='2048' %}<script>(function(){var g=[],sc=0,live=false,b=document.createElement('div');b.style.cssText='display:grid;grid-template-columns:repeat(4,1fr);gap:8px;background:#bbada0;padding:8px;border-radius:14px;touch-action:none;user-select:none';document.getElementById('stage').appendChild(b);
+var col={0:'#cdc1b4',2:'#eee4da',4:'#ede0c8',8:'#f2b179',16:'#f59563',32:'#f67c5f',64:'#f65e3b',128:'#edcf72',256:'#edcc61',512:'#edc850',1024:'#edc53f',2048:'#edc22e'};
+function render(){var h='';for(var i=0;i<16;i++){var v=g[i];h+='<div style="aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:'+(v>=1024?22:v>=128?26:32)+'px;background:'+(col[v]||'#3c3a32')+';color:'+(v>4?'#fff':'#776e65')+'">'+(v||'')+'</div>'}b.innerHTML=h;setSc(sc)}
+function add(){var e=[];for(var i=0;i<16;i++)if(!g[i])e.push(i);if(e.length)g[e[Math.floor(Math.random()*e.length)]]=Math.random()<.9?2:4}
+function slide(a){a=a.filter(Boolean);var r=[];for(var i=0;i<a.length;i++){if(a[i]==a[i+1]){r.push(a[i]*2);sc+=a[i]*2;i++}else r.push(a[i])}while(r.length<4)r.push(0);return r}
+function can(){for(var i=0;i<16;i++){if(!g[i])return true;if(i%4<3&&g[i]==g[i+1])return true;if(i<12&&g[i]==g[i+4])return true}return false}
+function move(d){if(STOP||!live)return;var ng=g.slice(),moved=false;for(var k=0;k<4;k++){var idx=[];for(var j=0;j<4;j++)idx.push(d<2?k*4+j:j*4+k);if(d==1||d==3)idx.reverse();var nr=slide(idx.map(function(i){return g[i]}));idx.forEach(function(i,n){if(ng[i]!=nr[n])moved=true;ng[i]=nr[n]})}
+if(moved){g=ng;add();render();if(!can()){live=false;over(sc)}}}
+window.restart=function(){hideStart();g=[];for(var i=0;i<16;i++)g.push(0);sc=0;live=true;add();add();render()};
+document.addEventListener('keydown',function(e){var d={ArrowLeft:0,ArrowRight:1,ArrowUp:2,ArrowDown:3,a:0,d:1,w:2,s:3}[e.key];if(d!==undefined){move(d);e.preventDefault()}});
+swipe(b,move);CURSC=function(){return live?sc:0};for(var i=0;i<16;i++)g.push(0);render()})();</script>
+{% elif key=='diamond' %}<script>var QS={{ qjson|safe }};(function(){var W=15,H=15,C=24,st=document.getElementById('stage');st.style.position='relative';
+var cv=document.createElement('canvas');cv.width=W*C;cv.height=H*C;cv.style.cssText='max-width:100%;border-radius:14px;background:#0b1020;touch-action:none;display:block;margin:auto';st.appendChild(cv);
+var info=document.createElement('div');info.style.cssText='margin-top:8px;font-weight:600';st.appendChild(info);
+var qb=document.createElement('div');qb.style.cssText='display:none;position:absolute;left:0;right:0;top:0;bottom:0;background:rgba(15,23,42,.95);color:#fff;border-radius:14px;padding:14px;flex-direction:column;justify-content:center;text-align:left;z-index:4';st.appendChild(qb);
+var x=cv.getContext('2d'),g=[],pl={x:1,y:1},en=[],lv=1,lives=3,score=0,got=0,total=0,tleft=0,alive=false,paused=false,inv=0,msg='',msgT=0,last=Date.now(),eacc=0,tacc=0;
+function R(n){return Math.floor(Math.random()*n)}
+function T(a,b){return g[b*W+a]}
+function setT(a,b,v){g[b*W+a]=v}
+function T0(){return Math.max(60,125-lv*5)}
+function say(m){msg=m;msgT=1700}
+function reach(sx,sy,targets){var seen={},qu=[[sx,sy]];seen[sx+','+sy]=1;while(qu.length){var p=qu.shift();[[1,0],[-1,0],[0,1],[0,-1]].forEach(function(d){var a=p[0]+d[0],b=p[1]+d[1];if(a<0||b<0||a>=W||b>=H||T(a,b)==2||seen[a+','+b])return;seen[a+','+b]=1;qu.push([a,b])})}
+return targets.every(function(t){return seen[t[0]+','+t[1]]})}
+function build(){var tg,ex,ch,caves;
+for(var tries=0;tries<40;tries++){g=[];for(var j=0;j<H;j++)for(var i=0;i<W;i++)g.push((i==0||j==0||i==W-1||j==H-1)?2:(Math.random()<.07?2:1));
+pl={x:1,y:1};setT(1,1,0);setT(2,1,0);setT(1,2,0);caves=[];var nc=1+Math.floor(lv/2);
+for(var k=0;k<nc;k++){var cx=6+R(W-8),cy=6+R(H-8),len=6+R(6);for(var s=0;s<len;s++){if(T(cx,cy)!=2){setT(cx,cy,0);caves.push([cx,cy])}var d=[[1,0],[-1,0],[0,1],[0,-1]][R(4)];cx=Math.max(1,Math.min(W-2,cx+d[0]));cy=Math.max(1,Math.min(H-2,cy+d[1]))}}
+var free=function(far){var a,b,n=0;do{a=1+R(W-2);b=1+R(H-2);n++}while((T(a,b)==2||T(a,b)>=3||Math.abs(a-1)+Math.abs(b-1)<(far||4))&&n<400);return [a,b]};
+total=Math.min(18,5+lv*2);tg=[];for(var n=0;n<total;n++){var f=free();setT(f[0],f[1],3);tg.push(f)}
+ex=free(10);setT(ex[0],ex[1],4);ch=free();setT(ch[0],ch[1],5);
+if(reach(1,1,tg.concat([ex,ch])))break}
+en=[];var ne=Math.min(5,1+Math.floor((lv-1)/2)),cand=caves.filter(function(c){return T(c[0],c[1])==0&&Math.abs(c[0]-1)+Math.abs(c[1]-1)>=6});
+for(var e=0;e<ne;e++){var c=cand.length?cand.splice(R(cand.length),1)[0]:null;if(!c){c=[1+R(W-2),1+R(H-2)];if(T(c[0],c[1])==2||Math.abs(c[0]-1)+Math.abs(c[1]-1)<6)continue;setT(c[0],c[1],0)}en.push({x:c[0],y:c[1]})}
+got=0;tleft=T0();inv=1200;eacc=0;tacc=0;draw()}
+function hit(){if(inv>0||!alive)return;if(en.some(function(e){return e.x==pl.x&&e.y==pl.y})){lives--;inv=1600;pl.x=1;pl.y=1;say("👾 Yirtqich! Jon qoldi: "+Math.max(0,lives));if(lives<=0)end()}}
+function enemyStep(){en.forEach(function(e){var o=[];[[1,0],[-1,0],[0,1],[0,-1]].forEach(function(d){var a=e.x+d[0],b=e.y+d[1];if(a>0&&b>0&&a<W-1&&b<H-1&&(T(a,b)==0||T(a,b)==3)&&!en.some(function(z){return z!==e&&z.x==a&&z.y==b}))o.push([a,b])});
+if(!o.length)return;var p;if(Math.random()<.6){o.sort(function(m,n){return(Math.abs(m[0]-pl.x)+Math.abs(m[1]-pl.y))-(Math.abs(n[0]-pl.x)+Math.abs(n[1]-pl.y))});p=o[0]}else p=o[R(o.length)];e.x=p[0];e.y=p[1]});hit()}
+function end(){alive=false;over(score)}
+function ask(done){paused=true;var Q;if(QS.length){var sq=QS[R(QS.length)],o=[];sq.o.forEach(function(t,i){if(t)o.push({t:t,c:i==sq.c})});Q={q:sq.q,o:o}}
+else{var a=2+R(8),b=2+R(8),ans=a*b,o2=[{t:ans,c:true}];while(o2.length<4){var v=ans+R(15)-7;if(v>0&&!o2.some(function(z){return z.t==v}))o2.push({t:v,c:false})}Q={q:a+" × "+b+" = ?",o:o2}}
+Q.o.sort(function(){return Math.random()-.5});qb.innerHTML='';var h=document.createElement('div');h.style.cssText='font-size:17px;font-weight:700;margin-bottom:8px';h.textContent="🎁 Sehrli sandiq! "+Q.q;qb.appendChild(h);
+Q.o.forEach(function(op){var bt=document.createElement('button');bt.textContent=op.t;bt.style.cssText='margin:3px 0;text-align:left';bt.onclick=function(){qb.style.display='none';paused=false;done(op.c)};qb.appendChild(bt)});qb.style.display='flex'}
+function move(dx,dy){if(!alive||paused||STOP)return;var a=pl.x+dx,b=pl.y+dy,t=T(a,b);if(t==2||t===undefined)return;
+if(t==4){if(got<total){say("Avval barcha olmoslarni yig'ing! 💎 "+got+"/"+total);return}
+score+=50+tleft*2;setSc(score);lv++;paused=true;say("🎉 Daraja "+lv+"!");setTimeout(function(){paused=false;build()},900);pl.x=a;pl.y=b;draw();return}
+if(t==5){ask(function(ok){setT(a,b,0);pl.x=a;pl.y=b;if(ok){score+=50;if(lives<5)lives++;setSc(score);say("✅ To'g'ri! +50 ball va +1 jon")}else say("❌ Noto'g'ri — sandiq bo'sh!");hit();draw()});return}
+if(t==3){got++;score+=10;setSc(score)}
+if(t==1||t==3)setT(a,b,0);
+pl.x=a;pl.y=b;hit();draw()}
+function draw(){x.fillStyle='#0b1020';x.fillRect(0,0,cv.width,cv.height);x.textBaseline='middle';x.textAlign='center';
+for(var j=0;j<H;j++)for(var i=0;i<W;i++){var t=T(i,j),px=i*C,py=j*C;
+if(t==2){x.fillStyle='#374151';x.fillRect(px,py,C,C);x.fillStyle='#4b5563';x.fillRect(px+1,py+1,C-2,C/2-1);x.fillRect(px+1,py+C/2+1,C-2,C/2-2)}
+else if(t==1){x.fillStyle='#78350f';x.fillRect(px,py,C,C);x.fillStyle='#92400e';x.fillRect(px+3,py+4,3,3);x.fillRect(px+13,py+12,3,3);x.fillRect(px+16,py+3,2,2)}
+else{x.fillStyle='#111827';x.fillRect(px,py,C,C)}
+x.font='17px serif';if(t==3)x.fillText('💎',px+C/2,py+C/2+1);if(t==4){x.globalAlpha=got>=total?1:.4;x.fillText('🚪',px+C/2,py+C/2+1);x.globalAlpha=1}if(t==5)x.fillText('🎁',px+C/2,py+C/2+1)}
+x.font='17px serif';en.forEach(function(e){x.fillText('👾',e.x*C+C/2,e.y*C+C/2+1)});
+if(inv<=0||Math.floor(Date.now()/150)%2)x.fillText('⛏️',pl.x*C+C/2,pl.y*C+C/2+1);
+if(msgT>0){x.fillStyle='rgba(0,0,0,.7)';x.fillRect(0,H*C/2-18,W*C,36);x.fillStyle='#fff';x.font='15px sans-serif';x.fillText(msg,W*C/2,H*C/2)}
+info.textContent='❤'.repeat(Math.max(0,lives))+'   💎 '+got+'/'+total+'   ⏱ '+tleft+' s   Daraja '+lv}
+function tick(){var n=Date.now(),dt=Math.min(n-last,300);last=n;if(!alive||paused||STOP){draw();return}
+eacc+=dt;tacc+=dt;if(inv>0)inv-=dt;if(msgT>0)msgT-=dt;var step=Math.max(240,520-lv*30);while(eacc>=step){eacc-=step;enemyStep();if(!alive)return}
+while(tacc>=1000){tacc-=1000;tleft--;if(tleft<=0){lives--;say("⏰ Vaqt tugadi!");tleft=T0();if(lives<=0){end();return}}}draw()}
+window.restart=function(){hideStart();lv=1;lives=3;score=0;setSc(0);alive=true;paused=false;build();last=Date.now();say("Olmoslarni yig'ing, so'ng 🚪 ga boring!")};
+window.pad=move;setInterval(tick,100);
+document.addEventListener('keydown',function(e){var m={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1],a:[-1,0],d:[1,0],w:[0,-1],s:[0,1]}[e.key];if(m){move(m[0],m[1]);e.preventDefault()}});
+swipe(cv,function(d){var m=[[-1,0],[1,0],[0,-1],[0,1]][d];move(m[0],m[1])});CURSC=function(){return alive?score:0};build()})();</script>
+{% else %}<script>(function(){var st=document.getElementById('stage');st.innerHTML='<div id=qq style="font-size:42px;font-weight:800;margin:14px 0">?</div><div id=opts style="display:grid;grid-template-columns:1fr 1fr;gap:10px"></div><div id=info style="margin-top:14px;font-weight:600"></div>';
+var sc=0,streak=0,left=60,ans=0,run=false,tm;
+function r(n){return Math.floor(Math.random()*n)}
+function nextQ(){var lvl=Math.floor(sc/5),m=10+lvl*4,a=1+r(m),b=1+r(m),op=['+','-','×'][r(lvl>0?3:2)];if(op=='-'&&b>a){var t=a;a=b;b=t}if(op=='×'){a=2+r(6+lvl);b=2+r(6+lvl)}
+ans=op=='+'?a+b:op=='-'?a-b:a*b;document.getElementById('qq').textContent=a+' '+op+' '+b+' = ?';var o=[ans];while(o.length<4){var v=ans+r(11)-5;if(v>=0&&o.indexOf(v)<0)o.push(v)}o.sort(function(){return Math.random()-.5});
+var h='';o.forEach(function(v){h+='<button class=wide data-v="'+v+'" style="font-size:24px;margin:0">'+v+'</button>'});var box=document.getElementById('opts');box.innerHTML=h;box.querySelectorAll('button').forEach(function(bt){bt.onclick=function(){pick(+bt.getAttribute('data-v'))}})}
+function info(){document.getElementById('info').textContent='⏱ '+left+' s · seriya: '+streak}
+function pick(v){if(!run||STOP)return;if(v==ans){streak++;sc+=1+(streak%5==0?1:0)}else{streak=0;left=Math.max(0,left-3)}setSc(sc);info();nextQ()}
+function end(){run=false;clearInterval(tm);over(sc)}
+window.restart=function(){hideStart();sc=0;streak=0;left=60;run=true;setSc(0);nextQ();info();clearInterval(tm);tm=setInterval(function(){if(STOP)return;left--;info();if(left<=0)end()},1000)};
+document.addEventListener('keydown',function(e){var n=parseInt(e.key);if(n>=1&&n<=4){var bs=document.querySelectorAll('#opts button');if(bs[n-1])bs[n-1].click()}});CURSC=function(){return run?sc:0}})();</script>{% endif %}"""),
+'games_admin.html': P("""<h2>🕹 O'yinlarni boshqarish</h2>
+<form method=post class=card>{{ csrf()|safe }}<input type=hidden name=a value=settings><h3>⚙️ Sozlamalar</h3>{% for k,v in GAMES.items() %}<label class=opt><input type=checkbox name="on_{{ k }}" {{ 'checked' if on[k] }}> {{ v[0] }} {{ v[1] }} — yoqilgan</label>{% endfor %}
+<div class=row><label>📝 Qabul qilingan uy ishi uchun (daqiqa) <input type=number step=any min=0 max=600 name=hw value="{{ '%g'|format(hw) }}"></label><label>🧪 Yakunlangan test uchun (daqiqa) <input type=number step=any min=0 max=600 name=qz value="{{ '%g'|format(qz) }}"></label></div><button class=wide>Saqlash</button>
+<p class=mut><small>Butun o'yinlar bo'limini Sozlamalar sahifasida, alohida o'quvchiga taqiqlashni esa 🔐 Huquqlar → “O'yin o'ynash” orqali boshqarasiz.</small></p></form>
+<div class=card style="overflow-x:auto"><h3>🛒 Do'kon takliflari</h3><table>{% for o in offers %}<tr><td><b>{{ o.title }}</b><br><small class=mut>{% if o.kind=='time' %}⏱ {{ o.minutes }} daqiqa vaqt{% else %}{{ GN[o.game] if o.game in GN else "Barcha o'yinlar" }} — {{ 'umrbod' if not o.days else (o.days ~ ' kun') }}{% endif %}</small></td><td>{{ o.price }} ball</td><td>{{ '✅ faol' if o.active else '⛔ o‘chiq' }}</td>
+<td align=right><form method=post style="display:inline">{{ csrf()|safe }}<input type=hidden name=a value=otoggle><input type=hidden name=id value="{{ o.id }}"><button class=gray>{{ 'O‘chirish' if o.active else 'Yoqish' }}</button></form> <form method=post style="display:inline" onsubmit='return confirm("Taklif o’chirilsinmi?")'>{{ csrf()|safe }}<input type=hidden name=a value=odel><input type=hidden name=id value="{{ o.id }}"><button class=red>✖</button></form></td></tr>{% endfor %}</table>
+<h4>➕ Yangi taklif</h4><form method=post class=row>{{ csrf()|safe }}<input type=hidden name=a value=offer><input name=title placeholder="Nomi" required><select name=kind><option value=time>⏱ O'yin vaqti<option value=access>♾ O'yinni ochish</select><select name=game><option value=all>Barcha o'yinlar{% for k,v in GAMES.items() %}<option value={{ k }}>{{ v[1] }}{% endfor %}</select>
+<input type=number name=minutes min=0 placeholder="Daqiqa (vaqt uchun)"><input type=number name=days min=0 placeholder="Kun (0 = umrbod)"><input type=number name=price min=0 placeholder="Narx (ball)" required><button>Qo'shish</button></form></div>
+<div class=card><h3>🎁 Sovg'a berish / vaqtni tuzatish</h3><form method=post class=row>{{ csrf()|safe }}<input type=hidden name=a value=grant><select name=sid>{% for s in students %}<option value={{ s.id }}>{{ name(s) }}</option>{% endfor %}</select>
+<input type=number step=any name=minutes placeholder="Daqiqa (manfiy bo'lsa ayiriladi)"><select name=game><option value="">O'yin ochmaslik</option><option value=all>Barcha o'yinlar{% for k,v in GAMES.items() %}<option value={{ k }}>{{ v[1] }}{% endfor %}</select><input type=number name=days min=0 placeholder="Kun (0 = umrbod)"><button>Berish</button></form></div>
+{% if acc %}<div class=card><h3>♾ Faol ruxsatlar</h3>{% for a in acc %}<div class=row style="padding:3px 0"><span style="flex:1">{{ ((a.first ~ ' ' ~ a.last)|trim) or a.username }} — {{ GN[a.game] if a.game in GN else "Barcha o'yinlar" }} — {{ 'umrbod' if not a.until else ('to ' ~ a.until) }} <small class=mut>({{ a.src }})</small></span>
+<form method=post>{{ csrf()|safe }}<input type=hidden name=a value=revoke><input type=hidden name=id value="{{ a.id }}"><button class=red>Bekor qilish</button></form></div>{% endfor %}</div>{% endif %}
+<div class=card style="overflow-x:auto"><h3>📊 O'quvchilar bo'yicha</h3><table><tr><th>O'quvchi</th><th>Topgan (daq)</th><th>Ishlatgan (daq)</th><th>Qolgan (daq)</th><th>O'yinlar soni</th></tr>{% for r in stats %}<tr><td>{{ name(r.s) }}</td><td>{{ r.earned }}</td><td>{{ r.used }}</td><td><b>{{ r.left }}</b></td><td>{{ r.best }}</td></tr>{% endfor %}</table></div>"""),
+})
+
 app.jinja_loader = DictLoader(T)
 
 CSS = """:root{--p:#6c5ce7;--p2:#a363ff;--bg:#f2f3fb;--card:#fff;--tx:#1d2136;--mut:#6a7190;--bd:#e5e7f4;--ok:#16a34a;--bad:#e5484d;--warn:#f59e0b;--sh:0 6px 24px rgba(60,50,140,.08)}
@@ -2027,7 +2340,9 @@ th{padding:8px;text-align:left;color:var(--mut);font-size:13px}
 :root[data-theme=light]{--bg:#f2f3fb;--card:#fff;--tx:#1d2136;--mut:#6a7190;--bd:#e5e7f4}
 :root[data-accent=blue]{--p:#2f80ed;--p2:#56ccf2}:root[data-accent=green]{--p:#16a34a;--p2:#4ade80}:root[data-accent=pink]{--p:#e11d74;--p2:#fb7185}:root[data-accent=orange]{--p:#f97316;--p2:#fbbf24}
 .gh{background:color-mix(in srgb,var(--p) 10%,transparent);font-weight:700;color:var(--p);padding:10px}
-@media(max-width:700px){.cal .d{min-height:58px;font-size:10px}}"""
+@media(max-width:700px){.cal .d{min-height:58px;font-size:10px}}
+.ovl{position:absolute;inset:0;background:rgba(15,23,42,.88);color:#fff;display:flex;align-items:center;justify-content:center;border-radius:14px;text-align:center;z-index:5;padding:14px}
+.pad{display:grid;grid-template-columns:repeat(3,64px);gap:8px;justify-content:center;margin-top:12px}.pad button{padding:12px 0;font-size:20px}"""
 
 os.makedirs(os.path.join(B, 'static'), exist_ok=True)
 open(os.path.join(B, 'static', 'style.css'), 'w').write(CSS)

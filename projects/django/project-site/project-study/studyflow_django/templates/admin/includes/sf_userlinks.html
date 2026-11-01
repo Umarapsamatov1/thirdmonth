@@ -1,0 +1,6 @@
+{% if site_url %}<a class="sf-btn sf-btn-outline sf-hide-sm" href="{{ site_url }}">Saytga o‘tish ↗</a>{% endif %}
+{% if user.has_usable_password %}<a class="sf-icon-btn" href="{% url 'admin:password_change' %}" title="Parolni o‘zgartirish" aria-label="Parolni o‘zgartirish">🔑</a>{% endif %}
+<form id="logout-form" method="post" action="{% url 'admin:logout' %}">
+  {% csrf_token %}
+  <button type="submit" class="sf-btn sf-btn-dark">Chiqish</button>
+</form>

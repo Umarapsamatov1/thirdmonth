@@ -1,0 +1,27 @@
+{% load i18n studyflow_admin %}
+{% sf_role user as role %}{% sf_display_name user as display_name %}
+<nav class="sticky" id="nav-sidebar" aria-label="{% translate 'Sidebar' %}">
+  <div class="sf-user-chip">
+    <div class="sf-user-avatar">{{ display_name|first|upper }}</div>
+    <div class="sf-user-meta">
+      <b>{{ display_name }}</b>
+      <span>{{ user.email|default:user.get_username }}</span>
+    </div>
+  </div>
+  <span class="sf-role sf-role--{{ role.key }} sf-role--side">{{ role.label }}</span>
+
+  <a class="sf-side-link{% if request.resolver_match.url_name == 'index' %} active{% endif %}" href="{% url 'admin:index' %}">📊 Boshqaruv markazi</a>
+
+  <input type="search" id="nav-filter"
+         placeholder="Bo‘lim qidirish…"
+         aria-label="{% translate 'Filter navigation items' %}">
+  {% include 'admin/app_list.html' with app_list=available_apps show_changelinks=False %}
+
+  <div class="sf-side-footer">
+    {% if site_url %}<a class="sf-side-link" href="{{ site_url }}">🌐 Saytga qaytish</a>{% endif %}
+    <form method="post" action="{% url 'admin:logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="sf-side-link">↪ Chiqish</button>
+    </form>
+  </div>
+</nav>

@@ -1,0 +1,65 @@
+{% load static %}
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="StudyFlow — zamonaviy o‘quv platformasi">
+  <title>Biz haqimizda — StudyFlow</title>
+  <link rel="icon" href="{% static 'assets/images/logo.svg' %}" type="image/svg+xml">
+  <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
+</head>
+<body data-page="about" data-authenticated="{{ request.user.is_authenticated|yesno:'true,false' }}">
+<div class="page-shell">
+
+<div class="nav-wrap">
+  <div class="container">
+    <nav class="navbar" aria-label="Asosiy navigatsiya">
+      <a class="brand" href="{% url 'home' %}"><span class="brand-mark">⌁</span><span>StudyFlow</span></a>
+      <div class="nav-links">
+        <a class="nav-link" href="{% url 'home' %}" data-i18n="nav_home">Asosiy</a>
+        <a class="nav-link" href="{% url 'courses' %}" data-i18n="nav_courses">Kurslar</a>
+        <a class="nav-link" href="{% url 'languages' %}" data-i18n="nav_languages">Tillar</a>
+        <a class="nav-link" href="{% url 'about' %}" data-i18n="nav_about">Biz haqimizda</a>
+        <a class="nav-link" href="{% url 'contact' %}" data-i18n="nav_contact">Aloqa</a>
+      </div>
+      <div class="nav-actions">
+        <select class="lang-select" aria-label="Tilni tanlang"><option value="uz">UZ</option><option value="ru">RU</option><option value="en">EN</option></select>
+        <a class="btn btn-outline desktop-auth" data-auth="guest" href="{% url 'login' %}" data-i18n="nav_login">Kirish</a>
+        <a class="btn btn-primary desktop-auth" data-auth="guest" href="{% url 'register' %}" data-i18n="nav_register">Ro‘yxatdan o‘tish</a>
+        <a class="btn btn-dark desktop-auth hidden" data-auth="user" href="{% url 'dashboard' %}" data-i18n="nav_dashboard">Kabinet</a>
+        <button class="icon-btn menu-toggle" aria-label="Menyuni ochish">☰</button>
+      </div>
+    </nav>
+  </div>
+</div>
+
+<main>
+<section class="page-hero"><div class="container"><div class="page-hero-box"><div><div class="eyebrow">Biz haqimizda</div><h1>Bilimni imkoniyatga aylantiramiz</h1><p>StudyFlow — o‘quvchi, mentor va zamonaviy texnologiyani birlashtiradigan ta’lim ekotizimi.</p></div></div></div></section>
+<section class="section"><div class="container split"><div><div class="eyebrow">Bizning missiya</div><h2 style="font-size:clamp(2.4rem,5vw,4.2rem);line-height:1;letter-spacing:-.055em;margin:14px 0">Har bir inson uchun <span class="muted-word">sifatli ta’lim</span></h2><p style="color:var(--muted)">Biz murakkab bilimlarni qisqa, tushunarli va amaliy formatga aylantiramiz. Maqsadimiz — o‘quvchiga faqat ma’lumot emas, real ko‘nikma va ishonch berish.</p><div class="check-list"><div class="check"><i>✓</i><div><b>Amaliy yondashuv</b><br><span style="color:var(--muted)">Nazariyadan keyin darhol vazifa va loyiha.</span></div></div><div class="check"><i>✓</i><div><b>Ochiq va qulay ta’lim</b><br><span style="color:var(--muted)">Turli daraja va jadvalga mos darslar.</span></div></div><div class="check"><i>✓</i><div><b>Doimiy rivojlanish</b><br><span style="color:var(--muted)">Kurslar bozor talabi asosida yangilanadi.</span></div></div></div></div><div class="visual-panel"><span style="font-size:8rem;position:absolute;left:50%;top:44%;transform:translate(-50%,-50%)">🌍</span><div class="floating-note note-a"><small>O‘quvchilar</small><h3 style="font-size:2rem;margin:3px 0">9,400+</h3><p style="margin:0;color:#687178">3 mamlakatdan</p></div><div class="floating-note note-b"><small>Mentorlar</small><h3 style="font-size:2rem;margin:3px 0">28</h3><p style="margin:0;color:#687178">Amaliy ekspert</p></div></div></div></section>
+<section class="section" style="background:#eef1ef"><div class="container"><div class="section-head"><div class="eyebrow">Rivojlanish yo‘li</div><h2>Kichik g‘oyadan <span class="muted-word">katta hamjamiyatgacha</span></h2></div><div class="timeline"><div class="timeline-item"><div class="timeline-dot">1</div><div class="timeline-content"><h3>2024 — G‘oya</h3><p>Amaliy va qisqa darslarga asoslangan platforma konsepsiyasi yaratildi.</p></div></div><div class="timeline-item"><div class="timeline-dot">2</div><div class="timeline-content"><h3>2025 — Birinchi kurslar</h3><p>Python, English va Frontend yo‘nalishlarida ilk guruhlar ishga tushdi.</p></div></div><div class="timeline-item"><div class="timeline-dot">3</div><div class="timeline-content"><h3>2026 — StudyFlow ekotizimi</h3><p>Shaxsiy kabinet, progress tizimi va ko‘p tilli interfeys birlashtirildi.</p></div></div></div></div></section>
+<section class="section"><div class="container"><div class="section-head"><div class="eyebrow">Qadriyatlar</div><h2>Biz ishonadigan tamoyillar</h2></div><div class="grid-3"><article class="card feature-card"><div class="feature-icon">✨</div><h3>Soddalik</h3><p>Murakkab mavzuni sodda tilda tushuntirish.</p></article><article class="card feature-card"><div class="feature-icon">🎯</div><h3>Natija</h3><p>Har bir dars aniq ko‘nikmaga olib boradi.</p></article><article class="card feature-card"><div class="feature-icon">🤝</div><h3>Hamjamiyat</h3><p>Bir-birini qo‘llaydigan o‘quvchilar va mentorlar.</p></article></div></div></section>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <a class="brand" href="{% url 'home' %}"><span class="brand-mark">⌁</span><span>StudyFlow</span></a>
+        <p data-i18n="footer_text">Bilim olishni sodda, chiroyli va natijador qiladigan zamonaviy o‘quv platformasi.</p>
+        <form action="{% url 'newsletter' %}" method="POST" class="newsletter-form search-box" style="max-width:360px;background:#232526;border-color:#313537">{% csrf_token %}
+          <input type="email" placeholder="Email manzilingiz" name="email" required aria-label="Email" style="color:#fff"><button class="btn btn-primary" type="submit" style="min-height:38px;padding:8px 14px">Yuborish</button>
+        </form>
+      </div>
+      <div><div class="footer-title" data-i18n="footer_pages">Sahifalar</div><div class="footer-links"><a href="{% url 'courses' %}">Kurslar</a><a href="{% url 'languages' %}">Tillar</a><a href="{% url 'about' %}">Biz haqimizda</a><a href="{% url 'contact' %}">Aloqa</a></div></div>
+      <div><div class="footer-title" data-i18n="footer_account">Hisob</div><div class="footer-links"><a href="{% url 'register' %}">Ro‘yxatdan o‘tish</a><a href="{% url 'login' %}">Kirish</a><a href="{% url 'dashboard' %}">Kabinet</a><form method="POST" action="{% url 'logout' %}" class="logout-form">{% csrf_token %}<button type="submit">Chiqish</button></form></div></div>
+      <div><div class="footer-title" data-i18n="footer_help">Yordam</div><div class="footer-links"><a href="mailto:hello@studyflow.uz">hello@studyflow.uz</a><a href="tel:+998901234567">+998 90 123 45 67</a><a href="{% url 'contact' %}">Savol yuborish</a></div></div>
+    </div>
+    <div class="footer-bottom"><span>© <span data-year></span> StudyFlow. <span data-i18n="footer_rights">Barcha huquqlar himoyalangan.</span></span><span>Toshkent, O‘zbekiston</span></div>
+  </div>
+</footer>
+<div class="toast" id="toast"></div>
+</div>
+<script src="{% static 'assets/js/app.js' %}"></script>
+</body>
+</html>

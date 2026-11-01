@@ -1,0 +1,426 @@
+{% load static %}
+<!doctype html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="StudyFlow — zamonaviy o‘quv platformasi">
+    <title>Aloqa — StudyFlow</title>
+    <link rel="icon" href="{% static 'assets/images/logo.svg' %}" type="image/svg+xml">
+    <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
+</head>
+<body data-page="contact" data-authenticated="{{ request.user.is_authenticated|yesno:'true,false' }}">
+<div class="page-shell">
+
+    <div class="nav-wrap">
+        <div class="container">
+            <nav class="navbar" aria-label="Asosiy navigatsiya">
+                <a class="brand" href="{% url 'home' %}"><span class="brand-mark">⌁</span><span>StudyFlow</span></a>
+                <div class="nav-links">
+                    <a class="nav-link" href="{% url 'home' %}" data-i18n="nav_home">Asosiy</a>
+                    <a class="nav-link" href="{% url 'courses' %}" data-i18n="nav_courses">Kurslar</a>
+                    <a class="nav-link" href="{% url 'languages' %}" data-i18n="nav_languages">Tillar</a>
+                    <a class="nav-link" href="{% url 'about' %}" data-i18n="nav_about">Biz haqimizda</a>
+                    <a class="nav-link" href="{% url 'contact' %}" data-i18n="nav_contact">Aloqa</a>
+                </div>
+                <div class="nav-actions">
+                    <select class="lang-select" aria-label="Tilni tanlang">
+                        <option value="uz">UZ</option>
+                        <option value="ru">RU</option>
+                        <option value="en">EN</option>
+                    </select>
+                    <a class="btn btn-outline desktop-auth" data-auth="guest" href="{% url 'login' %}"
+                       data-i18n="nav_login">Kirish</a>
+                    <a class="btn btn-primary desktop-auth" data-auth="guest" href="{% url 'register' %}"
+                       data-i18n="nav_register">Ro‘yxatdan o‘tish</a>
+                    <a class="btn btn-dark desktop-auth hidden" data-auth="user" href="{% url 'dashboard' %}"
+                       data-i18n="nav_dashboard">Kabinet</a>
+                    <button class="icon-btn menu-toggle" aria-label="Menyuni ochish">☰</button>
+                </div>
+            </nav>
+        </div>
+    </div>
+
+    <main>
+        <section class="page-hero">
+            <div class="container">
+                <div class="page-hero-box">
+                    <div>
+                        <div class="eyebrow">Aloqa</div>
+                        <h1>Savolingizni yuboring</h1>
+                        <p>Kurs, hamkorlik yoki platforma bo‘yicha xabaringizni email orqali jo‘nating.</p></div>
+                </div>
+            </div>
+        </section>
+        <section class="section">
+            <div class="container">
+                <div class="form-wrap">
+                    <aside class="form-info">
+                        <div>
+                            <div class="eyebrow">Bog‘lanish</div>
+                            <h2 style="font-size:3rem;line-height:1;letter-spacing:-.05em">Sizni eshitishga
+                                tayyormiz.</h2>
+                            <p style="color:#aeb6ba">Formani to‘ldiring. “Email orqali yuborish” tugmasi qurilmangizdagi
+                                pochta ilovasini tayyor xabar bilan ochadi.</p>
+                            <div class="info-list">
+                                <div class="info-item"><span>✉️</span>
+                                    <div><b>Email</b><span>hello@studyflow.uz</span></div>
+                                </div>
+                                <div class="info-item"><span>📞</span>
+                                    <div><b>Telefon</b><span>+998 90 123 45 67</span></div>
+                                </div>
+                                <div class="info-item"><span>📍</span>
+                                    <div><b>Manzil</b><span>Toshkent, O‘zbekiston</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div><small style="color:#858f93">Javob berish vaqti: odatda 1 ish kuni ichida.</small></div>
+                    </aside>
+                    <div class="form-card"><h2 style="font-size:2.5rem;letter-spacing:-.05em;margin-top:0">Xabar
+                        yuborish</h2>
+
+
+
+<style>
+    .contact-box {
+        width: 100%;
+        background: #fff;
+        border: 1px solid #e7eae7;
+        border-radius: 20px;
+        padding: 30px;
+        box-sizing: border-box;
+        box-shadow: 0 10px 35px rgba(0, 0, 0, .04);
+    }
+
+    .contact-box * {
+        box-sizing: border-box;
+    }
+
+    .contact-header {
+        margin-bottom: 28px;
+    }
+
+    .contact-header .tag {
+        display: inline-block;
+        padding: 7px 14px;
+        background: #edf5ee;
+        color: #2a652e;
+        border-radius: 30px;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 14px;
+    }
+
+    .contact-header h2 {
+        font-size: 27px;
+        color: #172019;
+        font-weight: 750;
+        margin: 0 0 10px;
+    }
+
+    .contact-header p {
+        color: #818981;
+        font-size: 14px;
+        line-height: 1.7;
+        margin: 0;
+    }
+
+    .contact-new-form {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+    }
+
+    .contact-new-form .full {
+        grid-column: 1 / -1;
+    }
+
+    .contact-input {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        min-width: 0;
+    }
+
+    .contact-input label {
+        color: #252b26;
+        font-size: 13px;
+        font-weight: 650;
+    }
+
+    .contact-input label span {
+        color: #2a652e;
+    }
+
+    .contact-input input,
+    .contact-input textarea {
+        width: 100%;
+        border: 1px solid #e3e8e4;
+        background: #f8faf8;
+        padding: 15px 16px;
+        border-radius: 12px;
+        font-family: inherit;
+        font-size: 14px;
+        color: #202720;
+        outline: none;
+        transition: .25s;
+    }
+
+    .contact-input input::placeholder,
+    .contact-input textarea::placeholder {
+        color: #a0a9a1;
+    }
+
+    .contact-input input:focus,
+    .contact-input textarea:focus {
+        background: white;
+        border-color: #2a652e;
+        box-shadow: 0 0 0 4px rgba(42, 101, 46, .08);
+    }
+
+    .contact-input textarea {
+        min-height: 145px;
+        resize: vertical;
+    }
+
+    .contact-send {
+        width: 100%;
+        min-height: 54px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 12px;
+        background: #2a652e;
+        color: white;
+        font-size: 15px;
+        font-weight: 650;
+        cursor: pointer;
+        transition: .25s;
+    }
+
+    .contact-send:hover {
+        background: #1e4e22;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(42, 101, 46, .20);
+    }
+
+    .contact-send:active {
+        transform: scale(.99);
+    }
+
+    .contact-send .arrow {
+        font-size: 22px;
+    }
+
+    .contact-small {
+        text-align: center;
+        font-size: 12px;
+        color: #9ca49d;
+        margin: 12px 0 0;
+    }
+
+    .contact-alert {
+        border-radius: 12px;
+        padding: 14px 17px;
+        font-size: 14px;
+        line-height: 1.6;
+        background: #eaf6ed;
+        color: #2a652e;
+        border: 1px solid #cce7d1;
+        margin: 0;
+    }
+
+    .contact-alert.error {
+        background: #fff0f0;
+        color: #bc2929;
+        border-color: #ffd2d2;
+    }
+
+    @media (max-width: 600px) {
+        .contact-box {
+            padding: 22px 18px;
+            border-radius: 16px;
+        }
+
+        .contact-header h2 {
+            font-size: 23px;
+        }
+
+        .contact-new-form {
+            grid-template-columns: 1fr;
+            gap: 17px;
+        }
+
+        .contact-new-form .full {
+            grid-column: auto;
+        }
+    }
+</style>
+
+
+<div class="contact-box">
+
+    <div class="contact-header">
+        <span class="tag">BOG‘LANISH</span>
+        <h2>Bizga xabar yuboring</h2>
+        <p>
+            Savolingiz yoki taklifingiz bormi?
+            Formani to‘ldiring va biz siz bilan bog‘lanamiz.
+        </p>
+    </div>
+
+    <form
+        id="contactPostForm"
+        class="contact-new-form"
+        method="POST"
+        action="{% url 'contact' %}"
+    >
+        {% csrf_token %}
+
+        <!-- ISM -->
+        <div class="contact-input">
+            <label for="name">
+                Ismingiz <span>*</span>
+            </label>
+
+            <input
+                id="name"
+                name="name"
+                type="text"
+                required
+                maxlength="120"
+                placeholder="Sardor"
+            >
+        </div>
+
+        <!-- EMAIL -->
+        <div class="contact-input">
+            <label for="email">
+                Email <span>*</span>
+            </label>
+
+            <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                placeholder="name@example.com"
+            >
+        </div>
+
+        <!-- SUBJECT -->
+        <div class="contact-input full">
+            <label for="subject">
+                Mavzu
+            </label>
+
+            <input
+                id="subject"
+                name="subject"
+                maxlength="200"
+                placeholder="Kurs haqida savol"
+            >
+        </div>
+
+        <!-- MESSAGE -->
+        <div class="contact-input full">
+            <label for="message">
+                Xabar <span>*</span>
+            </label>
+
+            <textarea
+                id="message"
+                name="message"
+                required
+                placeholder="Xabaringizni yozing..."
+            ></textarea>
+        </div>
+
+        <!-- SUBMIT -->
+        <div class="full">
+            <button
+                type="submit"
+                class="contact-send"
+            >
+                <span>Xabar yuborish</span>
+                <span class="arrow">↗</span>
+            </button>
+
+            <p class="contact-small">
+                Xabaringiz xavfsiz tarzda yuboriladi.
+            </p>
+        </div>
+
+        <!-- DJANGO MESSAGES -->
+        {% if messages %}
+        <div class="full" role="status">
+            {% for message in messages %}
+
+                <div class="contact-alert {% if 'error' in message.tags %}error{% endif %}">
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+        </div>
+        {% endif %}
+
+    </form>
+</div>
+
+
+
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <a class="brand" href="{% url 'home' %}"><span class="brand-mark">⌁</span><span>StudyFlow</span></a>
+                    <p data-i18n="footer_text">Bilim olishni sodda, chiroyli va natijador qiladigan zamonaviy o‘quv
+                        platformasi.</p>
+                    <form action="{% url 'newsletter' %}" method="POST" class="newsletter-form search-box"
+                          style="max-width:360px;background:#232526;border-color:#313537">{% csrf_token %}
+                        <input type="email" placeholder="Email manzilingiz" name="email" required aria-label="Email"
+                               style="color:#fff">
+                        <button class="btn btn-primary" type="submit" style="min-height:38px;padding:8px 14px">
+                            Yuborish
+                        </button>
+                    </form>
+                </div>
+                <div>
+                    <div class="footer-title" data-i18n="footer_pages">Sahifalar</div>
+                    <div class="footer-links"><a href="{% url 'courses' %}">Kurslar</a><a href="{% url 'languages' %}">Tillar</a><a
+                            href="{% url 'about' %}">Biz haqimizda</a><a href="{% url 'contact' %}">Aloqa</a></div>
+                </div>
+                <div>
+                    <div class="footer-title" data-i18n="footer_account">Hisob</div>
+                    <div class="footer-links"><a href="{% url 'register' %}">Ro‘yxatdan o‘tish</a><a
+                            href="{% url 'login' %}">Kirish</a><a href="{% url 'dashboard' %}">Kabinet</a>
+                        <form method="POST" action="{% url 'logout' %}" class="logout-form">{% csrf_token %}
+                            <button type="submit">Chiqish</button>
+                        </form>
+                    </div>
+                </div>
+                <div>
+                    <div class="footer-title" data-i18n="footer_help">Yordam</div>
+                    <div class="footer-links"><a href="mailto:hello@studyflow.uz">hello@studyflow.uz</a><a
+                            href="tel:+998901234567">+998 90 123 45 67</a><a href="{% url 'contact' %}">Savol
+                        yuborish</a></div>
+                </div>
+            </div>
+            <div class="footer-bottom"><span>© <span data-year></span> StudyFlow. <span data-i18n="footer_rights">Barcha huquqlar himoyalangan.</span></span><span>Toshkent, O‘zbekiston</span>
+            </div>
+        </div>
+    </footer>
+    <div class="toast" id="toast"></div>
+</div>
+<script src="{% static 'assets/js/app.js' %}"></script>
+</body>
+</html>

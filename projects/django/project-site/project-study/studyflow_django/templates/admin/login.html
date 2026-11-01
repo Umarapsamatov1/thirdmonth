@@ -1,0 +1,21 @@
+{% extends "admin/login.html" %}
+
+{% block branding %}
+<a class="sf-brand" href="{{ site_url|default:'/' }}">
+  <span class="sf-brand-mark">⌁</span>
+  <span class="sf-brand-text">StudyFlow</span>
+  <span class="sf-brand-tag">Admin</span>
+</a>
+{% endblock %}
+
+{% block content_title %}
+<div class="sf-login-head">
+  <div class="sf-eyebrow sf-eyebrow--ink">Boshqaruv paneli</div>
+  <h1>Admin panelga kirish</h1>
+  <p>Faqat super admin va staff xodimlar uchun.</p>
+</div>
+{% endblock %}
+
+{% block footer %}
+<a class="sf-login-back" href="{{ site_url|default:'/' }}">← Saytga qaytish</a>
+{% endblock %}

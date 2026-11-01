@@ -1,0 +1,41 @@
+{% extends "admin/base.html" %}
+{% load static studyflow_admin %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{# Sayt faqat yorug‘ mavzuda — admin ham shunday bo‘lsin #}
+{% block dark-mode-vars %}{% endblock %}
+
+{# admin.css eng oxirida yuklanadi, shunda Django uslublarini to‘liq qayta yozadi #}
+{% block responsive %}{{ block.super }}
+<link rel="icon" href="{% static 'assets/images/logo.svg' %}" type="image/svg+xml">
+<link rel="stylesheet" href="{% static 'assets/css/admin.css' %}">
+{% endblock %}
+
+{% block header %}
+<div class="sf-header-wrap">
+  <header id="header" class="sf-navbar">
+    <div id="branding">
+      {% block branding %}
+      <a class="sf-brand" href="{% url 'admin:index' %}">
+        <span class="sf-brand-mark">⌁</span>
+        <span class="sf-brand-text">StudyFlow</span>
+        <span class="sf-brand-tag">Admin</span>
+      </a>
+      {% endblock %}
+    </div>
+    {% block usertools %}
+    {% if has_permission %}
+    <div id="user-tools">
+      {% block welcome-msg %}
+        {% sf_role user as role %}
+        <span class="sf-role sf-role--{{ role.key }}">{{ role.label }}</span>
+      {% endblock %}
+      {% block userlinks %}{% include "admin/includes/sf_userlinks.html" %}{% endblock %}
+    </div>
+    {% endif %}
+    {% endblock %}
+    {% block nav-global %}{% endblock %}
+  </header>
+</div>
+{% endblock %}
